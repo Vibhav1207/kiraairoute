@@ -10,19 +10,33 @@ export async function createApp(): Promise<FastifyInstance> {
   return app;
 }
 
-export async function startServer(customPort?: number): Promise<FastifyInstance> {
-  const app = await createApp();
-  const port = customPort ?? DEFAULT_PORT;
+export async function startServer(customPort?: number): Promise<{ app: FastifyInstance; port: number }> {
+  const initialPort = customPort ?? DEFAULT_PORT;
+  const maxAttempts = 100;
 
-  try {
-    await app.listen({ host: "127.0.0.1", port });
-    console.log(`KiraAI Route running at http://127.0.0.1:${port}`);
-    console.log(`Web setup: http://127.0.0.1:${port}`);
-    return app;
-  } catch (error) {
-    console.error("Failed to start server:", error);
-    process.exit(1);
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const port = initialPort + attempt;
+    const app = await createApp();
+    try {
+      await app.listen({ host: "127.0.0.1", port });
+      if (attempt > 0) {
+        console.log(`Port ${initialPort} was in use. Automatically started on available port ${port}.`);
+      }
+      console.log(`KiraAI Route running at http://127.0.0.1:${port}`);
+      console.log(`Web setup: http://127.0.0.1:${port}`);
+      return { app, port };
+    } catch (error: any) {
+      await app.close();
+      if (error?.code === "EADDRINUSE") {
+        continue;
+      }
+      console.error("Failed to start server:", error);
+      process.exit(1);
+    }
   }
+
+  console.error(`Could not find an available port after ${maxAttempts} attempts starting from ${initialPort}.`);
+  process.exit(1);
 }
 
 // Auto-run if executed directly as server entry point

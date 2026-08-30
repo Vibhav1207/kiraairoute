@@ -23,18 +23,30 @@ function startServerProcess(): void {
 
   const child = spawn(process.execPath, [SERVER_PATH], {
     env: { ...process.env, KIRAAIROUTE_PORT: String(PORT) },
-    stdio: "inherit"
+    stdio: ["inherit", "pipe", "inherit"]
+  });
+
+  let openedBrowser = false;
+
+  child.stdout?.on("data", (chunk: Buffer) => {
+    const text = chunk.toString("utf-8");
+    process.stdout.write(text);
+
+    if (!openedBrowser) {
+      const match = text.match(/http:\/\/127\.0\.0\.1:(\d+)/);
+      if (match) {
+        openedBrowser = true;
+        const boundPort = match[1];
+        setTimeout(() => {
+          openBrowser(`http://127.0.0.1:${boundPort}`);
+        }, 500);
+      }
+    }
   });
 
   child.on("error", (error) => {
     console.error("\nFailed to start KiraAI Route:", error.message);
     process.exit(1);
-  });
-
-  child.on("spawn", () => {
-    setTimeout(() => {
-      openBrowser(`http://127.0.0.1:${PORT}`);
-    }, 1000);
   });
 
   child.on("exit", (code) => {

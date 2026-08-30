@@ -79,26 +79,6 @@ Add `kiraairoute` as a package dependency in your project:
 npm install @vibhav1207/kiraairoute
 ```
 
-#### TypeScript / JavaScript SDK Example:
-
-```typescript
-import { startServer, getModels, kiraChat } from "@vibhav1207/kiraairoute";
-
-// 1. Start the local gateway server programmatically on port 4010
-const app = await startServer(4010);
-
-// 2. Fetch all supported model definitions
-const models = getModels();
-console.log("Available Kira models:", models.map(m => m.id));
-
-// 3. Make direct requests to Kira AI
-const response = await kiraChat({
-  model: "kira-mini-1.0",
-  messages: [{ role: "user", content: "Write a high-performance Fibonacci function in TypeScript." }]
-});
-
-console.log("API Output:", response.data);
-```
 
 ---
 
