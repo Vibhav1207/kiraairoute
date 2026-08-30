@@ -4,7 +4,7 @@ import path from "node:path";
 import { autoConfigureAll } from "../cli/codex.js";
 import { getKiraApiKey, getKiraModel, hasKiraApiKey, setKiraApiKey, setKiraModel } from "../cli/config.js";
 import { DEFAULT_PORT } from "../config/constants.js";
-import { kiraChat, kiraStream, testKiraConnection } from "../kira/client.js";
+import { kiraChat, kiraStream, testKiraConnection, translateErrorMessage } from "../kira/client.js";
 import { getModel, getModels } from "../kira/models.js";
 import { chatToResponses, ResponsesRequest, responsesToChat } from "../protocols/responses.js";
 import { getMetrics, recordRequest } from "./metrics.js";
@@ -224,7 +224,16 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
         if (!upstream.ok || !upstream.body) {
           const text = await upstream.text();
           recordRequest(model, 0, Date.now() - startTime, upstream.status);
-          return reply.code(upstream.status).send({ error: { message: text } });
+          let errorObj: any;
+          try {
+            errorObj = JSON.parse(text);
+            if (errorObj?.error?.message && typeof errorObj.error.message === "string") {
+              errorObj.error.message = translateErrorMessage(errorObj.error.message);
+            }
+          } catch {
+            errorObj = { error: { message: translateErrorMessage(text) } };
+          }
+          return reply.code(upstream.status).send(errorObj);
         }
 
         reply.hijack();
@@ -276,7 +285,16 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
         if (!upstream.ok || !upstream.body) {
           const text = await upstream.text();
           recordRequest(model, 0, Date.now() - startTime, upstream.status);
-          return reply.code(upstream.status).send({ error: { message: text } });
+          let errorObj: any;
+          try {
+            errorObj = JSON.parse(text);
+            if (errorObj?.error?.message && typeof errorObj.error.message === "string") {
+              errorObj.error.message = translateErrorMessage(errorObj.error.message);
+            }
+          } catch {
+            errorObj = { error: { message: translateErrorMessage(text) } };
+          }
+          return reply.code(upstream.status).send(errorObj);
         }
 
         reply.hijack();
