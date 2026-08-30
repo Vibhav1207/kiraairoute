@@ -139,16 +139,29 @@ npm run dev
 ```text
 kiraairoute/
 ├── src/
-│   ├── cli.ts
-│   ├── server.ts
-│   ├── kira.ts
-│   ├── models.ts
-│   └── protocols/
-│       └── responses.ts
+│   ├── cli/
+│   │   ├── cli.ts
+│   │   ├── config.ts
+│   │   └── ui.ts
+│   ├── server/
+│   │   ├── server.ts
+│   │   ├── routes.ts
+│   │   └── middleware.ts
+│   ├── kira/
+│   │   ├── client.ts
+│   │   └── models.ts
+│   ├── protocols/
+│   │   ├── responses.ts
+│   │   └── chat.ts
+│   ├── config/
+│   │   └── constants.ts
+│   └── index.ts
 ├── dist/
+├── README.md
 ├── package.json
 ├── tsconfig.json
-└── README.md
+├── .gitignore
+└── LICENSE
 ```
 
 ## Security

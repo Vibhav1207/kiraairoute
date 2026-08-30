@@ -1,4 +1,14 @@
-export const KIRA_MODELS = [
+export interface ModelDefinition {
+  id: string;
+  name: string;
+  provider: string;
+  free: boolean;
+  balance_required: boolean;
+  daily_limit: string;
+  context_window: number;
+}
+
+export const KIRA_MODELS: readonly ModelDefinition[] = [
   {
     id: "kira-mini-1.0",
     name: "Kira Mini 1.0",
@@ -81,10 +91,11 @@ export const KIRA_MODELS = [
     context_window: 1_000_000
   }
 ] as const;
-export function getModels() {
+
+export function getModels(): readonly ModelDefinition[] {
   return KIRA_MODELS;
 }
 
-export function getModel(modelId: string) {
+export function getModel(modelId: string): ModelDefinition | undefined {
   return KIRA_MODELS.find((model) => model.id === modelId);
 }
