@@ -1,11 +1,14 @@
 {
-  "name": "kiraairoute",
+  "name": "@vibhav1207/kiraairoute",
   "version": "0.1.2",
   "description": "Open-source gateway for using Kira AI with OpenAI-compatible clients.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
     "kiraairoute": "dist/cli/cli.js"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   },
   "repository": {
     "type": "git",
