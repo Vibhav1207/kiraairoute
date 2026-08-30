@@ -19,16 +19,16 @@ export function translateErrorMessage(message: string): string {
 
   const lower = message.toLowerCase();
   if (lower.includes("bảo trì") || lower.includes("maintenance")) {
-    return "The model service is temporarily under maintenance on Kira AI upstream. Switching to alternative model...";
+    return "The model service is temporarily under maintenance on Kira AI upstream. Please select another model in the KiraAI Route dashboard.";
   }
   if (lower.includes("nhiều yêu cầu") || lower.includes("thử lại sau") || lower.includes("quá nhiều") || lower.includes("traffic")) {
-    return "The model is currently receiving high traffic. Auto-switching to fast fallback model...";
+    return "The model is currently receiving high traffic. Please try again in a few seconds or switch to Mimo V2.5.";
   }
   if (lower.includes("số dư") || lower.includes("không đủ") || lower.includes("balance")) {
     return "Insufficient account balance. Please select a free model (e.g. Mimo V2.5 or Kira Mini 1.0) or check your account at kiraai.vn/developer.";
   }
   if (lower.includes("không thể truy cập") || lower.includes("unreachable")) {
-    return "The selected model is currently unreachable. Switching to fallback model...";
+    return "The selected model is currently unreachable. Please select another model like Mimo V2.5.";
   }
   if (lower.includes("không hợp lệ") || lower.includes("invalid key") || lower.includes("api key")) {
     return "Invalid Kira API key. Please check your API key at kiraai.vn/developer.";
@@ -37,7 +37,7 @@ export function translateErrorMessage(message: string): string {
   return message;
 }
 
-export async function kiraChat(body: unknown, retries = 2, timeoutMs = 20000): Promise<{ status: number; data: unknown }> {
+export async function kiraChat(body: unknown, retries = 2, timeoutMs = 60000): Promise<{ status: number; data: unknown }> {
   try {
     const apiKey = getKiraApiKey();
     const response = await fetch(`${KIRA_BASE_URL}/chat/completions`, {
@@ -72,14 +72,14 @@ export async function kiraChat(body: unknown, retries = 2, timeoutMs = 20000): P
       (typeof text === "string" && (text.includes("nhiều yêu cầu") || text.includes("thử lại") || text.includes("502 Bad Gateway") || text.includes("bảo trì")));
 
     if (isTransient && retries > 0) {
-      await delay(800 * (3 - retries));
+      await delay(1000 * (3 - retries));
       return kiraChat(body, retries - 1, timeoutMs);
     }
 
     return { status: response.status, data };
   } catch (err) {
     if (retries > 0) {
-      await delay(800 * (3 - retries));
+      await delay(1000 * (3 - retries));
       return kiraChat(body, retries - 1, timeoutMs);
     }
     return {
@@ -93,7 +93,7 @@ export async function kiraChat(body: unknown, retries = 2, timeoutMs = 20000): P
   }
 }
 
-export async function kiraStream(body: unknown, timeoutMs = 15000): Promise<Response> {
+export async function kiraStream(body: unknown, timeoutMs = 120000): Promise<Response> {
   const apiKey = getKiraApiKey();
   return fetch(`${KIRA_BASE_URL}/chat/completions`, {
     method: "POST",
@@ -115,7 +115,7 @@ export async function testKiraConnection(modelOverride?: string): Promise<{ stat
       messages: [{ role: "user", content: "hi" }],
       max_tokens: 1,
       stream: true
-    }, 8000);
+    }, 10000);
 
     if (res.status >= 400 || !res.ok) {
       const text = await res.text();

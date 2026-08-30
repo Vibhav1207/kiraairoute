@@ -343,7 +343,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
         for (const candidate of candidateModels) {
           try {
             const payload = { ...chatPayload, model: candidate, stream: true };
-            upstream = await kiraStream(payload, 8000);
+            upstream = await kiraStream(payload, 120000);
             if (upstream.ok && upstream.body) {
               successfulModel = candidate;
               break;

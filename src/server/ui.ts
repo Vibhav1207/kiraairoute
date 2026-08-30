@@ -460,7 +460,7 @@ select:focus {
     <img src="/logo.png" alt="KiraAI Route Logo" class="brand-logo-img" onerror="this.style.display='none'">
     <div class="brand-text-group">
       <span class="brand-title">KiraAI Route</span>
-      <span class="version-pill">v0.3.2</span>
+      <span class="version-pill">v0.3.3</span>
     </div>
   </div>
   <div class="nav-status">
