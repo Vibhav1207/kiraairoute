@@ -4,7 +4,7 @@ export { registerMiddleware } from "./server/middleware.js";
 export { getMetrics, recordRequest } from "./server/metrics.js";
 export type { RequestMetric } from "./server/metrics.js";
 export { getWebPageHtml } from "./server/ui.js";
-export { kiraChat, kiraStream, testKiraConnection } from "./kira/client.js";
+export { kiraChat, kiraStream, testKiraConnection, translateErrorMessage } from "./kira/client.js";
 export { getModels, getModel, KIRA_MODELS } from "./kira/models.js";
 export type { ModelDefinition } from "./kira/models.js";
 export { responsesToChat, chatToResponses, createSseEvent } from "./protocols/responses.js";

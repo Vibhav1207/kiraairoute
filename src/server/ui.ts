@@ -4,145 +4,171 @@ export function getWebPageHtml(): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KIRAAI ROUTE</title>
+<title>KiraAI Route Gateway</title>
+<link rel="icon" type="image/png" href="/logo.png">
 <style>
 :root {
-  --bg-black: #000000;
-  --bg-card: #0a0a0a;
-  --neon-green: #00ff66;
-  --text-white: #ffffff;
-  --text-grey: #888888;
-  --text-dark: #000000;
-  --border-white: #ffffff;
-  --border-green: #00ff66;
-  --font-mono: "JetBrains Mono", "Fira Code", Consolas, "Courier New", monospace;
+  --bg-app: #100d0a;
+  --bg-card: #191410;
+  --bg-input: #120e0b;
+  --bg-hover: #261e18;
+  --border-color: #352920;
+  --border-hover: #544033;
+  --text-primary: #f5eedc;
+  --text-secondary: #c5b49f;
+  --text-muted: #8a7765;
+  --accent-primary: #c88d51;
+  --accent-hover: #d99e62;
+  --accent-glow: rgba(200, 141, 81, 0.25);
+  --status-green: #10b981;
+  --status-amber: #f59e0b;
+  --status-red: #ef4444;
+  --radius-card: 16px;
+  --radius-input: 10px;
+  --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: var(--bg-black);
-  color: var(--text-white);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 1.4;
+  background: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  text-transform: uppercase;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* App Header */
-.app-header {
-  border-bottom: 2px solid #222222;
-  background: var(--bg-black);
+/* Header Navbar */
+.navbar {
+  height: 68px;
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(25, 20, 16, 0.8);
+  backdrop-filter: blur(12px);
   padding: 0 32px;
-  height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.brand-box {
+.nav-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
-.logo-square {
-  width: 32px;
-  height: 32px;
-  background: var(--text-white);
-  color: var(--text-dark);
-  font-weight: 900;
-  font-size: 16px;
+.brand-logo-img {
+  height: 38px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(200, 141, 81, 0.3));
+}
+
+.brand-text-group {
   display: flex;
   align-items: center;
-  justify-content: center;
-  border: 1px solid var(--text-white);
+  gap: 10px;
 }
 
 .brand-title {
+  font-size: 17px;
   font-weight: 800;
-  font-size: 15px;
-  letter-spacing: 0.5px;
+  letter-spacing: -0.3px;
+  color: var(--text-primary);
 }
 
-.brand-tag {
-  font-size: 10px;
-  background: var(--text-white);
-  color: var(--text-dark);
-  padding: 2px 6px;
-  font-weight: 800;
-  margin-left: 8px;
-}
-
-.header-status {
+.version-pill {
   font-size: 11px;
-  color: var(--neon-green);
+  font-weight: 700;
+  background: rgba(200, 141, 81, 0.15);
+  color: var(--accent-primary);
+  border: 1px solid rgba(200, 141, 81, 0.3);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.nav-status {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--status-green);
+  box-shadow: 0 0 10px var(--status-green);
 }
 
 /* Main Container */
-.main-container {
-  max-width: 1080px;
+.main-wrapper {
+  max-width: 1040px;
   width: 100%;
-  margin: 36px auto;
+  margin: 40px auto;
   padding: 0 24px;
   flex: 1;
 }
 
-.section-header {
-  margin-bottom: 28px;
+.page-header {
+  margin-bottom: 32px;
 }
 
-.section-title {
-  font-size: 24px;
-  font-weight: 900;
-  letter-spacing: 1px;
-  color: var(--text-white);
+.page-title {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
   margin-bottom: 6px;
 }
 
-.section-desc {
-  color: var(--text-grey);
-  font-size: 12px;
-  text-transform: none;
+.page-subtitle {
+  color: var(--text-secondary);
+  font-size: 14px;
 }
 
-/* Configuration Grid Layout */
-.config-grid {
+/* Layout Grid */
+.content-grid {
   display: grid;
   grid-template-columns: 1fr 380px;
   gap: 28px;
   align-items: start;
 }
 
-@media (max-width: 960px) {
-  .config-grid { grid-template-columns: 1fr; }
+@media (max-width: 920px) {
+  .content-grid { grid-template-columns: 1fr; }
 }
 
-/* Left Form Box */
-.box-form {
+/* Form Card */
+.form-card {
   background: var(--bg-card);
-  border: 2px solid var(--border-white);
-  box-shadow: 4px 4px 0px var(--text-white);
-  padding: 28px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
-.field {
+.form-group {
   margin-bottom: 24px;
 }
 
-label {
+.form-group:last-child { margin-bottom: 0; }
+
+.form-label {
   display: block;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
   margin-bottom: 8px;
-  color: var(--text-white);
 }
 
 .input-container {
@@ -155,23 +181,23 @@ input[type="text"],
 input[type="password"],
 select {
   width: 100%;
-  height: 44px;
-  background: var(--bg-black);
-  border: 1px solid var(--border-white);
-  color: var(--text-white);
-  padding: 0 12px;
-  font-family: var(--font-mono);
-  font-size: 12px;
+  height: 46px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-input);
+  color: var(--text-primary);
+  padding: 0 14px;
+  font-family: var(--font-sans);
+  font-size: 13px;
   outline: none;
-  border-radius: 0;
-  text-transform: uppercase;
+  transition: all 0.15s ease;
 }
 
 input[type="text"]:focus,
 input[type="password"]:focus,
 select:focus {
-  border-color: var(--neon-green);
-  box-shadow: 0 0 0 1px var(--neon-green);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
 .eye-btn {
@@ -179,58 +205,61 @@ select:focus {
   right: 10px;
   background: transparent;
   border: none;
-  color: var(--text-grey);
+  color: var(--text-muted);
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 4px;
+  transition: color 0.15s ease;
 }
 
-.eye-btn:hover { color: var(--text-white); }
+.eye-btn:hover { color: var(--text-primary); }
 
-.field-subtext {
+.help-text {
   margin-top: 8px;
-  font-size: 11px;
-  color: var(--text-grey);
-  text-transform: none;
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
-.field-subtext a {
-  color: var(--neon-green);
-  text-decoration: underline;
+.help-text a {
+  color: var(--accent-primary);
+  text-decoration: none;
   font-weight: 600;
 }
 
-/* Selected Model Detail Box */
-.model-detail-box {
+.help-text a:hover { text-decoration: underline; }
+
+/* Model Detail Inspector Card */
+.model-inspector {
   margin-top: 12px;
-  background: var(--bg-black);
-  border: 2px solid var(--neon-green);
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-input);
   padding: 14px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.model-info-left {
+.inspector-info {
   display: flex;
   flex-direction: column;
 }
 
-.model-info-name {
-  font-weight: 800;
+.inspector-title {
+  font-weight: 700;
   font-size: 14px;
-  color: var(--text-white);
+  color: var(--text-primary);
 }
 
-.model-info-provider {
-  font-size: 10px;
-  color: var(--text-grey);
-  margin-top: 2px;
+.inspector-provider {
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
-.model-info-right {
+.inspector-badge-group {
   text-align: right;
   display: flex;
   flex-direction: column;
@@ -238,132 +267,136 @@ select:focus {
   gap: 4px;
 }
 
-.badge-green {
-  background: var(--neon-green);
-  color: var(--text-dark);
-  font-size: 10px;
-  font-weight: 900;
-  padding: 2px 8px;
+.badge-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
 }
 
-.badge-yellow {
-  background: #f59e0b;
-  color: var(--text-dark);
-  font-size: 10px;
-  font-weight: 900;
-  padding: 2px 8px;
+.tag-free { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); }
+.tag-balance { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); }
+
+.inspector-limits {
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
-.model-limits {
-  font-size: 10px;
-  color: var(--text-grey);
-}
-
-/* Action Button */
-.btn-action {
+/* Primary Action Button */
+.btn-primary {
   width: 100%;
   height: 48px;
-  background: var(--text-white);
-  color: var(--text-dark);
-  border: 2px solid var(--neon-green);
-  font-family: var(--font-mono);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, #a86c38 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-input);
+  font-family: var(--font-sans);
   font-size: 14px;
-  font-weight: 900;
+  font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  text-transform: uppercase;
   margin-top: 28px;
   transition: all 0.15s ease;
+  box-shadow: 0 4px 16px var(--accent-glow);
 }
 
-.btn-action:hover {
-  background: var(--neon-green);
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent-primary) 100%);
+  box-shadow: 0 6px 20px rgba(200, 141, 81, 0.4);
 }
 
-.btn-action:disabled {
-  opacity: 0.5;
+.btn-primary:disabled {
+  opacity: 0.6;
   cursor: wait;
+  box-shadow: none;
 }
 
-/* Status Banner */
-.status-banner {
+/* Status Toast */
+.status-toast {
   margin-top: 16px;
-  padding: 12px 14px;
-  border: 1px solid var(--border-white);
-  background: var(--bg-black);
-  font-size: 11px;
+  padding: 12px 16px;
+  border-radius: var(--radius-input);
+  font-size: 13px;
   display: none;
+  border: 1px solid transparent;
 }
 
-.status-banner.show { display: block; }
-.status-banner.info { color: var(--text-white); }
-.status-banner.success { color: var(--neon-green); border-color: var(--neon-green); }
-.status-banner.error { color: #ff5555; border-color: #ff5555; }
+.status-toast.show { display: block; }
+.status-toast.info { background: rgba(200, 141, 81, 0.12); color: var(--accent-primary); border-color: rgba(200, 141, 81, 0.3); }
+.status-toast.success { background: rgba(16, 185, 129, 0.12); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
+.status-toast.error { background: rgba(239, 68, 68, 0.12); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3); }
 
 /* Right Status Card */
-.box-status {
+.status-panel {
   background: var(--bg-card);
-  border: 2px solid var(--neon-green);
-  box-shadow: 5px 5px 0px var(--neon-green);
-  padding: 24px;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: var(--radius-card);
+  padding: 26px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   display: none;
 }
 
-.box-status.show { display: block; }
+.status-panel.show { display: block; }
 
-.status-header-banner {
-  background: var(--neon-green);
-  color: var(--text-dark);
-  font-weight: 900;
-  font-size: 14px;
-  padding: 10px 14px;
-  margin-bottom: 20px;
+.panel-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  letter-spacing: 0.5px;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--status-green);
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-color);
 }
 
-.status-item {
-  border: 1px solid var(--border-white);
-  background: var(--bg-black);
+.panel-item {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-input);
   padding: 12px 14px;
   margin-bottom: 14px;
 }
 
-.status-item:last-child { margin-bottom: 0; }
+.panel-item:last-child { margin-bottom: 0; }
 
-.status-label {
-  font-size: 10px;
-  color: var(--text-grey);
+.panel-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   margin-bottom: 4px;
 }
 
-.status-value-box {
+.panel-value-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-weight: 800;
+  font-weight: 600;
   font-size: 13px;
-  color: var(--neon-green);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
 }
 
-.copy-btn {
+.btn-icon {
   background: transparent;
   border: none;
-  color: var(--text-white);
+  color: var(--text-secondary);
   cursor: pointer;
-  font-size: 14px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.15s ease;
 }
 
-.copy-btn:hover { color: var(--neon-green); }
+.btn-icon:hover { color: var(--accent-primary); }
 
-/* Launch Actions Group */
-.launch-actions-group {
-  margin-top: 20px;
+/* Action Buttons Group */
+.actions-group {
+  margin-top: 24px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -372,143 +405,158 @@ select:focus {
 .btn-launch {
   width: 100%;
   height: 44px;
-  background: var(--neon-green);
-  color: var(--text-dark);
-  border: 2px solid var(--neon-green);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 900;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-input);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  text-transform: uppercase;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+  transition: all 0.15s ease;
 }
 
 .btn-launch:hover {
-  background: var(--text-white);
-  border-color: var(--text-white);
+  opacity: 0.95;
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4);
 }
 
-.btn-secondary-action {
+.btn-secondary {
   width: 100%;
-  height: 38px;
-  background: transparent;
-  color: var(--text-white);
-  border: 1px solid var(--border-white);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
+  height: 40px;
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-input);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  text-transform: uppercase;
+  transition: all 0.15s ease;
 }
 
-.btn-secondary-action:hover {
-  background: var(--text-white);
-  color: var(--text-dark);
+.btn-secondary:hover {
+  background: var(--border-color);
+  border-color: var(--border-hover);
+}
+.btn-icon-img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  vertical-align: middle;
 }
 </style>
 </head>
 <body>
 
 <!-- Header -->
-<header class="app-header">
-  <div class="brand-box">
-    <div class="logo-square">K</div>
-    <div class="brand-title">
-      KIRAAI ROUTE <span class="brand-tag">V0.1.2 LOCAL GATEWAY</span>
+<header class="navbar">
+  <div class="nav-brand">
+    <img src="/logo.png" alt="KiraAI Route Logo" class="brand-logo-img" onerror="this.style.display='none'">
+    <div class="brand-text-group">
+      <span class="brand-title">KiraAI Route</span>
+      <span class="version-pill">v0.1.4</span>
     </div>
   </div>
-  <div class="header-status">
-    <span>● GATEWAY ENGINE ONLINE</span>
+  <div class="nav-status">
+    <span class="status-dot"></span>
+    <span>Gateway Active</span>
   </div>
 </header>
 
-<!-- Main Area -->
-<main class="main-container">
-  <div class="section-header">
-    <h1 class="section-title">> GATEWAY CONFIGURATION_</h1>
-    <p class="section-desc">Connect your Kira AI account and configure the default model for your local proxy server.</p>
+<!-- Main Container -->
+<main class="main-wrapper">
+  <div class="page-header">
+    <h1 class="page-title">Gateway Configuration</h1>
+    <p class="page-subtitle">Connect your Kira AI account and configure the default model for your local proxy server.</p>
   </div>
 
-  <div class="config-grid">
-    <!-- Left Config Form -->
-    <div class="box-form">
-      <div class="field">
-        <label for="apiKey">KIRA API KEY</label>
+  <div class="content-grid">
+    <!-- Left Configuration Form -->
+    <div class="form-card">
+      <div class="form-group">
+        <label for="apiKey" class="form-label">Kira API Key</label>
         <div class="input-container">
-          <input id="apiKey" type="password" placeholder="ENTER YOUR KIRA API KEY..." autocomplete="off">
-          <button id="toggleApiKey" type="button" class="eye-btn" title="Toggle Visibility">
-            <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          <input id="apiKey" type="password" placeholder="Paste your Kira API key" autocomplete="off">
+          <button id="toggleApiKey" type="button" class="eye-btn" title="Toggle Visibility" aria-label="Toggle API Key visibility">
+            <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
           </button>
         </div>
-        <div class="field-subtext">
+        <div class="help-text">
           Don't have an API key? <a href="https://kiraai.vn/developer/" target="_blank" rel="noopener">Create one at kiraai.vn/developer</a>
         </div>
       </div>
 
-      <div class="field">
-        <label for="model">DEFAULT MODEL</label>
+      <div class="form-group">
+        <label for="model" class="form-label">Default Model</label>
         <select id="model"></select>
 
-        <div id="modelDetailBox" class="model-detail-box">
-          <div class="model-info-left">
-            <div id="mName" class="model-info-name">KIRA MINI 1.0</div>
-            <div id="mProvider" class="model-info-provider">KIRA</div>
+        <div id="modelInspector" class="model-inspector">
+          <div class="inspector-info">
+            <span id="mName" class="inspector-title">Kira Mini 1.0</span>
+            <span id="mProvider" class="inspector-provider">Kira AI</span>
           </div>
-          <div class="model-info-right">
-            <div id="mBadge" class="badge-green">■ FREE (NO BALANCE)</div>
-            <div id="mLimits" class="model-limits">150M TOKENS/DAY · 1,000K CONTEXT</div>
+          <div class="inspector-badge-group">
+            <span id="mBadge" class="badge-tag tag-free">Free Model</span>
+            <span id="mLimits" class="inspector-limits">150M tokens/day · 1M context</span>
           </div>
         </div>
       </div>
 
-      <button id="start" class="btn-action">
-        <span>(▶) TEST & START ROUTE</span>
+      <button id="start" class="btn-primary">
+        <span>Test & Start Gateway</span>
       </button>
 
-      <div id="status" class="status-banner"></div>
+      <div id="status" class="status-toast"></div>
     </div>
 
-    <!-- Right Status Card -->
-    <div id="boxStatus" class="box-status">
-      <div class="status-header-banner">
-        <span>■</span> KIRAAI ROUTE IS RUNNING
+    <!-- Right Status Panel -->
+    <div id="statusPanel" class="status-panel">
+      <div class="panel-header">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        KiraAI Route is Running
       </div>
 
-      <div class="status-item">
-        <div class="status-label">> ACTIVE MODEL</div>
-        <div class="status-value-box">
-          <span id="stModel">KIRA-MINI-1.0</span>
+      <div class="panel-item">
+        <div class="panel-label">Active Model</div>
+        <div class="panel-value-row">
+          <span id="stModel">kira-mini-1.0</span>
         </div>
       </div>
 
-      <div class="status-item">
-        <div class="status-label">> LOCAL API ENDPOINT</div>
-        <div class="status-value-box">
-          <span id="stEndpoint">HTTP://127.0.0.1:4010/V1</span>
-          <button class="copy-btn" onclick="copyEndpoint()" title="Copy Endpoint">📋</button>
+      <div class="panel-item">
+        <div class="panel-label">Local API Endpoint</div>
+        <div class="panel-value-row">
+          <span id="stEndpoint">http://127.0.0.1:4010/v1</span>
+          <button class="btn-icon" onclick="copyEndpoint()" title="Copy Endpoint">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </button>
         </div>
       </div>
 
-      <div class="status-item">
-        <div class="status-label">> CODEX STATUS</div>
-        <div class="status-value-box">
-          <span>READY TO CONNECT</span>
-          <span style="color: var(--neon-green)">■</span>
+      <div class="panel-item">
+        <div class="panel-label">Codex Status</div>
+        <div class="panel-value-row">
+          <span>Ready to connect</span>
+          <span style="color: var(--status-green); font-size:18px;">●</span>
         </div>
       </div>
 
-      <div class="launch-actions-group">
+      <div class="actions-group">
         <button id="btnLaunchCodex" class="btn-launch" onclick="launchCodex()">
-          <span>🚀 LAUNCH CODEX</span>
+          <img src="/codex-logo.webp" class="btn-icon-img" alt="Codex Logo" onerror="this.style.display='none'">
+          <span>Launch Codex</span>
         </button>
-        <button class="btn-secondary-action" onclick="copyEndpoint()">
-          <span>📋 COPY API ENDPOINT</span>
+        <button class="btn-secondary" onclick="copyEndpoint()">
+          <span>📋 Copy API Endpoint</span>
         </button>
-        <button class="btn-secondary-action" onclick="resetConfig()">
-          <span>🛑 RECONFIGURE</span>
+        <button class="btn-secondary" onclick="resetConfig()">
+          <span>🔄 Reconfigure</span>
         </button>
       </div>
     </div>
@@ -519,8 +567,8 @@ select:focus {
 const modelSelect = document.getElementById("model");
 const apiKeyInput = document.getElementById("apiKey");
 const startButton = document.getElementById("start");
-const statusBanner = document.getElementById("status");
-const boxStatus = document.getElementById("boxStatus");
+const statusToast = document.getElementById("status");
+const statusPanel = document.getElementById("statusPanel");
 const toggleApiKeyBtn = document.getElementById("toggleApiKey");
 const eyeIcon = document.getElementById("eyeIcon");
 
@@ -535,25 +583,25 @@ toggleApiKeyBtn.addEventListener("click", () => {
 });
 
 function showStatus(message, type) {
-  statusBanner.className = "status-banner show " + (type || "info");
-  statusBanner.textContent = message;
+  statusToast.className = "status-toast show " + (type || "info");
+  statusToast.textContent = message;
 }
 
-function updateModelDetail() {
+function updateModelInspector() {
   const model = models.find(m => m.id === modelSelect.value);
   if (!model) return;
 
-  document.getElementById("mName").textContent = model.name.toUpperCase();
-  document.getElementById("mProvider").textContent = model.provider.toUpperCase();
-  document.getElementById("mLimits").textContent = model.daily_limit.toUpperCase() + " · " + (model.context_window / 1000).toLocaleString() + "K CONTEXT";
+  document.getElementById("mName").textContent = model.name;
+  document.getElementById("mProvider").textContent = model.provider;
+  document.getElementById("mLimits").textContent = model.daily_limit + " · " + (model.context_window / 1000).toLocaleString() + "k context";
 
   const badge = document.getElementById("mBadge");
   if (model.balance_required) {
-    badge.className = "badge-yellow";
-    badge.textContent = "■ FREE (BALANCE > 0 VND)";
+    badge.className = "badge-tag tag-balance";
+    badge.textContent = "Balance > 0 VND Required";
   } else {
-    badge.className = "badge-green";
-    badge.textContent = "■ FREE (NO BALANCE)";
+    badge.className = "badge-tag tag-free";
+    badge.textContent = "Free Model";
   }
 }
 
@@ -569,30 +617,30 @@ async function loadModels() {
 
     const g1 = document.createElement("optgroup"); g1.label = "FREE — NO BALANCE REQUIRED";
     for (const m of freeModels) {
-      const opt = document.createElement("option"); opt.value = m.id; opt.textContent = m.name.toUpperCase(); g1.appendChild(opt);
+      const opt = document.createElement("option"); opt.value = m.id; opt.textContent = m.name; g1.appendChild(opt);
     }
     modelSelect.appendChild(g1);
 
     const g2 = document.createElement("optgroup"); g2.label = "FREE — BALANCE REQUIRED";
     for (const m of balanceModels) {
-      const opt = document.createElement("option"); opt.value = m.id; opt.textContent = m.name.toUpperCase(); g2.appendChild(opt);
+      const opt = document.createElement("option"); opt.value = m.id; opt.textContent = m.name; g2.appendChild(opt);
     }
     modelSelect.appendChild(g2);
-    updateModelDetail();
+    updateModelInspector();
   } catch {
-    showStatus("COULD NOT LOAD AVAILABLE MODELS.", "error");
+    showStatus("Could not load available models list.", "error");
   }
 }
 
-modelSelect.addEventListener("change", updateModelDetail);
+modelSelect.addEventListener("change", updateModelInspector);
 
 startButton.addEventListener("click", async () => {
   const apiKey = apiKeyInput.value.trim();
   const model = modelSelect.value;
-  if (!apiKey) { showStatus("PLEASE ENTER YOUR KIRA API KEY.", "error"); return; }
+  if (!apiKey) { showStatus("Please enter your Kira API key.", "error"); return; }
 
   startButton.disabled = true;
-  showStatus("TESTING KIRA API CONNECTION...", "info");
+  showStatus("Testing Kira API connection...", "info");
 
   try {
     const setupRes = await fetch("/api/setup", {
@@ -601,44 +649,51 @@ startButton.addEventListener("click", async () => {
       body: JSON.stringify({ apiKey, model })
     });
     const setupData = await setupRes.json();
-    if (!setupRes.ok) throw new Error(setupData?.error?.message || "SETUP FAILED.");
+    if (!setupRes.ok) throw new Error(setupData?.error?.message || "Setup failed.");
 
     const testRes = await fetch("/api/test", { method: "POST" });
     const testData = await testRes.json();
-    if (!testRes.ok) throw new Error(testData?.error?.message || "CONNECTION TEST FAILED.");
+    if (!testRes.ok) throw new Error(testData?.error?.message || "Connection test failed.");
 
-    showStatus("✓ KIRA API CONNECTED SUCCESSFULLY.", "success");
-    showStatusBox(model);
+    showStatus("✓ Kira API connected successfully.", "success");
+    showStatusPanel(model);
   } catch (error) {
-    showStatus(error instanceof Error ? error.message.toUpperCase() : "SOMETHING WENT WRONG.", "error");
+    showStatus(error instanceof Error ? error.message : "Something went wrong.", "error");
   } finally {
     startButton.disabled = false;
   }
 });
 
-function showStatusBox(model) {
-  document.getElementById("stModel").textContent = model.toUpperCase();
-  document.getElementById("stEndpoint").textContent = (window.location.origin + "/V1").toUpperCase();
-  boxStatus.className = "box-status show";
+function showStatusPanel(model) {
+  document.getElementById("stModel").textContent = model;
+  document.getElementById("stEndpoint").textContent = window.location.origin + "/v1";
+  statusPanel.className = "status-panel show";
 }
 
 function resetConfig() {
-  boxStatus.className = "box-status";
-  statusBanner.className = "status-banner";
+  statusPanel.className = "status-panel";
+  statusToast.className = "status-toast";
 }
 
 function copyEndpoint() {
   const endpoint = window.location.origin + "/v1";
   navigator.clipboard.writeText(endpoint);
-  showStatus("API ENDPOINT COPIED TO CLIPBOARD.", "success");
+  showStatus("API Endpoint copied to clipboard.", "success");
 }
 
 async function launchCodex() {
   navigator.clipboard.writeText("codex");
-  showStatus("COMMAND 'codex' COPIED TO CLIPBOARD & LAUNCH TRIGGERED.", "success");
+  showStatus("Launching Codex app or terminal...", "info");
   try {
-    await fetch("/api/launch-codex", { method: "POST" });
-  } catch {}
+    const res = await fetch("/api/launch-codex", { method: "POST" });
+    if (res.ok) {
+      showStatus("✓ Launching Codex.", "success");
+    } else {
+      showStatus("Copied 'codex' command to clipboard. Paste in terminal to run.", "info");
+    }
+  } catch {
+    showStatus("Copied 'codex' command to clipboard. Paste in terminal to run.", "info");
+  }
 }
 
 async function init() {
@@ -647,8 +702,8 @@ async function init() {
     const data = await res.json();
     if (data.configured && data.model) {
       modelSelect.value = data.model;
-      updateModelDetail();
-      showStatusBox(data.model);
+      updateModelInspector();
+      showStatusPanel(data.model);
     }
   } catch {}
 }

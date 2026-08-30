@@ -1,4 +1,6 @@
 import type { FastifyInstance } from "fastify";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { getKiraApiKey, getKiraModel, hasKiraApiKey, setKiraApiKey, setKiraModel } from "../cli/config.js";
 import { kiraChat, kiraStream, testKiraConnection } from "../kira/client.js";
 import { getModel, getModels } from "../kira/models.js";
@@ -10,6 +12,36 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   // Web UI and status endpoints
   app.get("/", async (_request, reply) => {
     return reply.type("text/html").send(getWebPageHtml());
+  });
+
+  app.get("/logo.png", async (_request, reply) => {
+    try {
+      const logoPath = path.join(process.cwd(), "docs", "images", "logo.png");
+      const buffer = await fs.readFile(logoPath);
+      return reply.type("image/png").send(buffer);
+    } catch {
+      return reply.code(404).send({ error: "Logo file not found." });
+    }
+  });
+
+  app.get("/favicon.ico", async (_request, reply) => {
+    try {
+      const logoPath = path.join(process.cwd(), "docs", "images", "logo.png");
+      const buffer = await fs.readFile(logoPath);
+      return reply.type("image/png").send(buffer);
+    } catch {
+      return reply.code(404).send({ error: "Favicon file not found." });
+    }
+  });
+
+  app.get("/codex-logo.webp", async (_request, reply) => {
+    try {
+      const logoPath = path.join(process.cwd(), "docs", "images", "codex-logo.webp");
+      const buffer = await fs.readFile(logoPath);
+      return reply.type("image/webp").send(buffer);
+    } catch {
+      return reply.code(404).send({ error: "Codex logo file not found." });
+    }
   });
 
   app.get("/api/models", async () => {
@@ -67,13 +99,67 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.post("/api/launch-codex", async (_request, reply) => {
-    try {
-      const { exec } = await import("node:child_process");
-      exec("codex");
-      return { success: true, message: "Codex launch triggered." };
-    } catch {
-      return reply.code(500).send({ error: { message: "Could not launch Codex binary." } });
-    }
+    const { exec } = await import("node:child_process");
+    const platform = process.platform;
+
+    return new Promise((resolve) => {
+      if (platform === "win32") {
+        // First try launching Desktop App directly
+        exec('start "" "codex"', (err) => {
+          if (err) {
+            // Fallback to interactive terminal CLI
+            exec('start cmd /k "codex"');
+          }
+          resolve(reply.send({ success: true, message: "Codex launch triggered." }));
+        });
+      } else if (platform === "darwin") {
+        // First try launching macOS App Bundle
+        exec('open -a "Codex"', (err) => {
+          if (err) {
+            // Fallback to macOS Terminal CLI
+            exec(`osascript -e 'tell application "Terminal" to do script "codex"'`);
+          }
+          resolve(reply.send({ success: true, message: "Codex launch triggered." }));
+        });
+      } else {
+        exec('codex', (err) => {
+          if (err) {
+            exec('x-terminal-emulator -e "codex" || gnome-terminal -- codex');
+          }
+          resolve(reply.send({ success: true, message: "Codex launch triggered." }));
+        });
+      }
+    });
+  });
+
+  app.post("/api/launch-claude", async (_request, reply) => {
+    const { exec } = await import("node:child_process");
+    const platform = process.platform;
+
+    return new Promise((resolve) => {
+      if (platform === "win32") {
+        exec('start "" "claude"', (err) => {
+          if (err) {
+            exec('start cmd /k "claude || npx @anthropic-ai/claude-code"');
+          }
+          resolve(reply.send({ success: true, message: "Claude launch triggered." }));
+        });
+      } else if (platform === "darwin") {
+        exec('open -a "Claude Code" || open -a "Claude"', (err) => {
+          if (err) {
+            exec(`osascript -e 'tell application "Terminal" to do script "claude || npx @anthropic-ai/claude-code"'`);
+          }
+          resolve(reply.send({ success: true, message: "Claude launch triggered." }));
+        });
+      } else {
+        exec('claude', (err) => {
+          if (err) {
+            exec('x-terminal-emulator -e "claude || npx @anthropic-ai/claude-code"');
+          }
+          resolve(reply.send({ success: true, message: "Claude launch triggered." }));
+        });
+      }
+    });
   });
 
   // OpenAI Compatible Endpoints
