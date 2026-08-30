@@ -111,42 +111,13 @@ When you launch KiraAI Route, it automatically opens the local interactive web c
 3. **Test & Start**: Click **Test & Start**. KiraAI Route will verify the connection and lock in your local config.
 
 <div align="center">
-  <img src="docs/images/kiraairoute_web_dashboard.jpg" alt="KiraAI Route Local Web UI Setup Dashboard" width="100%" style="border-radius: 12px; margin: 16px 0;" />
+  <img src="docs/images/kiraairouteweb.png" alt="KiraAI Route Local Web UI Setup Dashboard" width="100%" style="border-radius: 12px; margin: 16px 0;" />
 </div>
 
 > 🔒 **Security Note**: Your API key is stored locally at `~/.kiraairoute/config.json`. It is never transmitted anywhere other than directly to official Kira AI endpoints (`https://kiraai.vn/api/v1`).
 
 ---
 
-## 🤖 Connecting Codex & AI Tools
-
-KiraAI Route provides a standard local OpenAI endpoint for coding tools and extensions:
-
-```text
-http://127.0.0.1:4010/v1
-```
-
-<div align="center">
-  <img src="docs/images/codex_integration_guide.jpg" alt="Codex CLI connected to KiraAI Route Gateway" width="100%" style="border-radius: 12px; margin: 16px 0;" />
-</div>
-
-### Connecting OpenAI Node.js / Python SDK
-
-```typescript
-import OpenAI from "openai";
-
-const client = new OpenAI({
-  baseURL: "http://127.0.0.1:4010/v1",
-  apiKey: "KIRA_API_KEY" // Or any placeholder if already configured in Web UI
-});
-
-const response = await client.chat.completions.create({
-  model: "kira-mini-1.0",
-  messages: [{ role: "user", content: "Hello from OpenAI SDK!" }]
-});
-
-console.log(response.choices[0].message.content);
-```
 
 ---
 
