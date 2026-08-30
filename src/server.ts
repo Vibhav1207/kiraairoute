@@ -9,7 +9,7 @@ import {
 import { getModels } from "./models.js";
 
 const app = Fastify({
-  logger: true
+  logger: false
 });
 
 await app.register(cors, {
@@ -57,14 +57,6 @@ app.post("/v1/responses", async (request, reply) => {
 
     const chatRequest =
       responsesToChat(responseRequest);
-
-    /*
-     * Codex uses stream=true.
-     *
-     * Kira's upstream Chat Completions endpoint
-     * is called normally, then we translate the
-     * result into a Responses-compatible SSE stream.
-     */
     if (responseRequest.stream === true) {
       const result = await kiraChat({
         ...chatRequest,
@@ -203,9 +195,6 @@ app.post("/v1/responses", async (request, reply) => {
       return;
     }
 
-    /*
-     * Normal non-streaming Responses API request.
-     */
     const result = await kiraChat(chatRequest);
 
     if (result.status >= 400) {
@@ -243,10 +232,14 @@ try {
     port
   });
 
-  console.log(
-    `KiraAI Route running at http://127.0.0.1:${port}`
-  );
+console.log("");
+console.log("KiraAI Route is running");
+console.log("");
+console.log(`API:    http://127.0.0.1:${port}/v1`);
+console.log(`Models: http://127.0.0.1:${port}/v1/models`);
+console.log("");
+console.log("Press Ctrl+C to stop.");
 } catch (error) {
-  app.log.error(error);
+console.error("KiraAI Route error:", error);
   process.exit(1);
 }
