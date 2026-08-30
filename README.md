@@ -4,92 +4,155 @@
 
 **High-performance, zero-latency OpenAI-compatible local AI gateway routing Kira AI models for Codex, Claude Code, and developer tools.**
 
-[![npm version](https://img.shields.io/npm/v/kiraairoute.svg?style=for-the-badge&color=6366f1)](https://www.npmjs.com/package/kiraairoute)
+[![npm version](https://img.shields.io/npm/v/@vibhav1207/kiraairoute.svg?style=for-the-badge&color=6366f1)](https://www.npmjs.com/package/@vibhav1207/kiraairoute)
 [![License](https://img.shields.io/badge/license-MIT-6366f1.svg?style=for-the-badge)](LICENSE)
 [![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-339933.svg?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178c6.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Build Status](https://img.shields.io/badge/build-passing-10b981.svg?style=for-the-badge)](https://github.com/Vibhav1207/kiraairoute)
 
-[Quick Start](#-quick-start) • [Installation](#-installation-options) • [Supported Models](#-supported-models) • [API Guide](#-api-endpoints) • [Local Development](#-local-development)
+[API Key Guide](#-how-to-obtain-a-kira-api-key) • [Node.js Setup](#-prerequisites-nodejs--npm) • [Installation](#-installation--usage-guide) • [Codex Setup](#-connecting-codex--ai-tools) • [Supported Models](#-supported-models)
 
 </div>
 
 ---
 
-## ⚡ Quick Start
+## 🔑 How to Obtain a Kira API Key
 
-Run instantly without installing:
+Before running KiraAI Route, you will need an official API key from Kira AI:
+
+1. Visit the official **[Kira AI Platform](https://kiraai.vn)** and log in or create an account.
+2. Navigate to **Dashboard** → **API Keys**.
+3. Click **Create New Key**, enter a label for your key, and click **Generate**.
+4. Copy your newly generated API key. You will paste this into the local KiraAI Route web setup interface.
+
+<div align="center">
+  <img src="docs/images/kira_api_key_guide.jpg" alt="Kira AI API Key Management Dashboard" width="100%" style="border-radius: 12px; margin: 16px 0;" />
+</div>
+
+---
+
+## 💻 Prerequisites (Node.js & NPM)
+
+KiraAI Route requires **Node.js v18.0.0 or higher** installed on your system.
+
+### Checking Node.js Version
+
+Open your terminal or command prompt and run:
 
 ```bash
-npx kiraairoute
+node -v
+npm -v
 ```
 
-On first launch, **KiraAI Route** opens a sleek local setup dashboard at **`http://127.0.0.1:4010`**, prompts for your Kira API key, and persists it locally.
+If Node.js is not installed, download the LTS version for Windows, macOS, or Linux from **[nodejs.org](https://nodejs.org)**.
 
-Your OpenAI-compatible endpoint will be available at:
+---
+
+## 🚀 Installation & Usage Guide
+
+You can run and use **KiraAI Route** in three different ways:
+
+### Method 1: Instant Launch via `npx` (Zero Installation)
+
+Run directly in your terminal without installing globally:
+
+```bash
+npx @vibhav1207/kiraairoute
+```
+
+### Method 2: Global CLI Installation
+
+Install globally on your system to run the `kiraairoute` command anytime:
+
+```bash
+npm install -g @vibhav1207/kiraairoute
+
+# Start the gateway
+kiraairoute
+```
+
+### Method 3: Use as a Node.js / TypeScript SDK Module
+
+Add `kiraairoute` as a package dependency in your project:
+
+```bash
+npm install @vibhav1207/kiraairoute
+```
+
+#### TypeScript / JavaScript SDK Example:
+
+```typescript
+import { startServer, getModels, kiraChat } from "@vibhav1207/kiraairoute";
+
+// 1. Start the local gateway server programmatically on port 4010
+const app = await startServer(4010);
+
+// 2. Fetch all supported model definitions
+const models = getModels();
+console.log("Available Kira models:", models.map(m => m.id));
+
+// 3. Make direct requests to Kira AI
+const response = await kiraChat({
+  model: "kira-mini-1.0",
+  messages: [{ role: "user", content: "Write a high-performance Fibonacci function in TypeScript." }]
+});
+
+console.log("API Output:", response.data);
+```
+
+---
+
+## 🖥️ Interactive Local Web Setup Dashboard
+
+When you launch KiraAI Route, it automatically opens the local interactive web configuration dashboard at **`http://127.0.0.1:4010`**:
+
+1. **Enter API Key**: Paste your Kira API Key into the secure input field.
+2. **Select Model**: Choose your preferred model (e.g. `Kira Mini 1.0` or `DeepSeek V4 Flash`).
+3. **Test & Start**: Click **Test & Start**. KiraAI Route will verify the connection and lock in your local config.
+
+<div align="center">
+  <img src="docs/images/kiraairoute_web_dashboard.jpg" alt="KiraAI Route Local Web UI Setup Dashboard" width="100%" style="border-radius: 12px; margin: 16px 0;" />
+</div>
+
+> 🔒 **Security Note**: Your API key is stored locally at `~/.kiraairoute/config.json`. It is never transmitted anywhere other than directly to official Kira AI endpoints (`https://kiraai.vn/api/v1`).
+
+---
+
+## 🤖 Connecting Codex & AI Tools
+
+KiraAI Route provides a standard local OpenAI endpoint for coding tools and extensions:
 
 ```text
 http://127.0.0.1:4010/v1
 ```
 
----
+<div align="center">
+  <img src="docs/images/codex_integration_guide.jpg" alt="Codex CLI connected to KiraAI Route Gateway" width="100%" style="border-radius: 12px; margin: 16px 0;" />
+</div>
 
-## ✨ Features
-
-- ⚡ **OpenAI Compatible**: Native drop-in support for `/v1/chat/completions` and `/v1/responses`.
-- 🔒 **Local & Secure Key Storage**: API keys are saved safely at `~/.kiraairoute/config.json`. Never sent anywhere except official Kira API endpoints.
-- 🌐 **Interactive Setup Dashboard**: Sleek web interface for configuration, model switching, and connection diagnostics.
-- 🌊 **Real-Time Streaming**: High-speed Server-Sent Events (SSE) streaming for real-time response token rendering.
-- 🤖 **Designed for Codex & AI CLI Tools**: Works seamlessly with Codex, Claude Code, Cursor, and custom LLM workflows.
-- 📦 **Flexible Deployment**: Works as an `npx` one-liner, a global CLI binary, or a TypeScript/Node.js library module.
-
----
-
-## 📦 Installation Options
-
-### Option 1: Global CLI Installation
-
-Install globally to run `kiraairoute` from anywhere:
-
-```bash
-npm install -g kiraairoute
-kiraairoute
-```
-
-### Option 2: NPM Package / TypeScript Module
-
-Install as a dependency in your Node.js or TypeScript project:
-
-```bash
-npm install kiraairoute
-```
-
-#### Programmatic Usage in Code:
+### Connecting OpenAI Node.js / Python SDK
 
 ```typescript
-import { startServer, getModels, kiraChat } from "kiraairoute";
+import OpenAI from "openai";
 
-// Programmatically launch local proxy server
-const app = await startServer(4010);
-
-// List available Kira models
-const models = getModels();
-console.log("Available models:", models);
-
-// Direct API execution
-const result = await kiraChat({
-  model: "kira-mini-1.0",
-  messages: [{ role: "user", content: "Hello from KiraAI Route SDK!" }]
+const client = new OpenAI({
+  baseURL: "http://127.0.0.1:4010/v1",
+  apiKey: "KIRA_API_KEY" // Or any placeholder if already configured in Web UI
 });
 
-console.log(result.data);
+const response = await client.chat.completions.create({
+  model: "kira-mini-1.0",
+  messages: [{ role: "user", content: "Hello from OpenAI SDK!" }]
+});
+
+console.log(response.choices[0].message.content);
 ```
 
 ---
 
-## 🤖 Supported Models
+## 📊 Supported Models
 
-Kira provides generous daily token allowances for selected free and balance models:
+Kira provides free daily token allowances for the following models:
 
 | Model Name | Model ID | Provider | Balance Req. | Daily Allowance | Context Window |
 |---|---|---|---|---|---|
@@ -107,87 +170,57 @@ Kira provides generous daily token allowances for selected free and balance mode
 
 ## 📡 API Endpoints
 
-### 1. List Models
+### 1. List Models (`GET /v1/models`)
 
 ```bash
 curl http://127.0.0.1:4010/v1/models
 ```
 
-### 2. Chat Completions (`/v1/chat/completions`)
+### 2. Chat Completions (`POST /v1/chat/completions`)
 
 ```bash
 curl http://127.0.0.1:4010/v1/chat/completions \
-  -H "Authorization: Bearer YOUR_KIRA_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "kira-mini-1.0",
     "messages": [
-      { "role": "user", "content": "Write a fast Fibonacci function in TypeScript." }
+      { "role": "user", "content": "Write a clean Express.js middleware in TypeScript." }
     ]
   }'
 ```
 
-### 3. Responses API (`/v1/responses`)
+### 3. Responses API (`POST /v1/responses`)
 
 ```bash
 curl http://127.0.0.1:4010/v1/responses \
-  -H "Authorization: Bearer YOUR_KIRA_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "kira-mini-1.0",
-    "input": "Explain quantum computing in simple terms."
+    "input": "Summarize the principles of microservices architecture."
   }'
-```
-
----
-
-## 💻 Codex & Client Integration
-
-Configure your OpenAI-compatible developer tools to connect via KiraAI Route:
-
-- **API Base URL**: `http://127.0.0.1:4010/v1`
-- **API Key**: `YOUR_KIRA_API_KEY` (or any string if already configured in Web setup)
-- **Model**: `kira-mini-1.0` (or any supported model ID)
-
-Example with official OpenAI Node.js SDK:
-
-```typescript
-import OpenAI from "openai";
-
-const openai = new OpenAI({
-  baseURL: "http://127.0.0.1:4010/v1",
-  apiKey: "KIRA_API_KEY"
-});
-
-const completion = await openai.chat.completions.create({
-  model: "kira-mini-1.0",
-  messages: [{ role: "user", content: "Hello!" }]
-});
-
-console.log(completion.choices[0].message.content);
 ```
 
 ---
 
 ## 🛠️ Local Development
 
-Clone the repository and set up your local development environment:
+To contribute or run from source:
 
 ```bash
-# Clone repository
+# 1. Clone repository
 git clone https://github.com/Vibhav1207/kiraairoute.git
 cd kiraairoute
 
-# Install dependencies
+# 2. Install dependencies
 npm install
 
-# Build TypeScript to dist/
+# 3. Build TypeScript to dist/
 npm run build
 
-# Start production build
+# 4. Start production build
 npm start
 
-# Run live development mode with tsx
+# 5. Run live development mode
 npm run dev
 ```
 
@@ -197,10 +230,12 @@ npm run dev
 
 ```text
 kiraairoute/
+├── docs/
+│   └── images/           # Visual documentation screenshots
 ├── src/
 │   ├── cli/
-│   │   ├── cli.ts        # CLI entry point script
-│   │   ├── config.ts     # Config persistence & environment loading
+│   │   ├── cli.ts        # Main CLI entry point script
+│   │   ├── config.ts     # Configuration persistence & environment loading
 │   │   └── ui.ts         # Terminal banner & browser launch helper
 │   ├── server/
 │   │   ├── server.ts     # Fastify app factory & lifecycle manager
@@ -215,7 +250,7 @@ kiraairoute/
 │   ├── config/
 │   │   └── constants.ts  # Shared application default constants
 │   └── index.ts          # Main package export module
-├── dist/                 # Compiled JavaScript output
+├── dist/                 # Compiled ES module JavaScript output
 ├── README.md
 ├── package.json
 ├── tsconfig.json
@@ -224,13 +259,6 @@ kiraairoute/
 
 ---
 
-## 🔒 Security
-
-- Never commit your Kira API key to public repositories.
-- Keep your API key in environment variables (`KIRA_API_KEY`) or in the local config file `~/.kiraairoute/config.json`.
-
----
-
 ## 📄 License
 
-This project is open-source software licensed under the [MIT License](LICENSE).
+Distributed under the open-source **[MIT License](LICENSE)**.
