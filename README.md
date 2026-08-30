@@ -26,7 +26,7 @@ Before running KiraAI Route, you will need an official API key from Kira AI:
 4. Copy your newly generated API key. You will paste this into the local KiraAI Route web setup interface.
 
 <div align="center">
-  <img src="docs/images/kira_api_key_guide.png" alt="Kira AI Official Developer Portal and Models List at https://kiraai.vn/developer/" width="100%" style="border-radius: 12px; margin: 16px 0;" />
+  <img src="docs/images/copyapikey.png" alt="Kira AI Official Developer Portal and Models List at https://kiraai.vn/developer/" width="100%" style="border-radius: 12px; margin: 16px 0;" />
 </div>
 
 ---
