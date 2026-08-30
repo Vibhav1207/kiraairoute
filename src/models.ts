@@ -40,3 +40,7 @@ export const KIRA_MODELS = [
 export function getModels() {
   return KIRA_MODELS;
 }
+
+export function isSupportedModel(model: string): boolean {
+  return KIRA_MODELS.some((item) => item.id === model);
+}

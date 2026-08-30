@@ -1,12 +1,16 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
+import net from "node:net";
+
 import { kiraChat, getKiraApiKey } from "./kira.js";
+
 import {
   ResponsesRequest,
   responsesToChat,
   chatToResponses
 } from "./protocols/responses.js";
-import { getModels } from "./models.js";
+
+import { getModels, isSupportedModel } from "./models.js";
 
 const app = Fastify({
   logger: false
@@ -33,12 +37,38 @@ app.get("/v1/models", async () => {
 
 app.post("/v1/chat/completions", async (request, reply) => {
   try {
+    const body = request.body as {
+      model?: string;
+    };
+
+    if (!body?.model) {
+      return reply.code(400).send({
+        error: {
+          message: "Missing required field: model",
+          type: "invalid_request_error",
+          param: "model"
+        }
+      });
+    }
+
+    if (!isSupportedModel(body.model)) {
+      return reply.code(400).send({
+        error: {
+          message: `Unsupported model: ${body.model}`,
+          type: "invalid_request_error",
+          param: "model"
+        }
+      });
+    }
+
     const result = await kiraChat(request.body);
 
     return reply
       .code(result.status)
       .send(result.data);
   } catch (error) {
+    console.error("Chat completion error:", error);
+
     return reply.code(500).send({
       error: {
         message:
@@ -57,142 +87,29 @@ app.post("/v1/responses", async (request, reply) => {
 
     const chatRequest =
       responsesToChat(responseRequest);
-    if (responseRequest.stream === true) {
-      const result = await kiraChat({
-        ...chatRequest,
-        stream: false
-      });
 
-      if (result.status >= 400) {
-        return reply
-          .code(result.status)
-          .send(result.data);
-      }
+    const model = (chatRequest as {
+      model?: string;
+    }).model;
 
-      const response = chatToResponses(result.data);
-
-      reply.raw.statusCode = 200;
-
-      reply.raw.setHeader(
-        "Content-Type",
-        "text/event-stream"
-      );
-
-      reply.raw.setHeader(
-        "Cache-Control",
-        "no-cache, no-transform"
-      );
-
-      reply.raw.setHeader(
-        "Connection",
-        "keep-alive"
-      );
-
-      const sendEvent = (
-        type: string,
-        data: unknown
-      ) => {
-        const event = {
-          ...((data as object) ?? {}),
-          type
-        };
-
-        reply.raw.write(
-          `event: ${type}\n`
-        );
-
-        reply.raw.write(
-          `data: ${JSON.stringify(event)}\n\n`
-        );
-      };
-
-      const outputItem = response.output[0];
-
-      if (!outputItem) {
-        sendEvent("response.completed", {
-          response: {
-            ...response,
-            status: "completed"
-          }
-        });
-
-        reply.raw.write(
-          "data: [DONE]\n\n"
-        );
-
-        reply.raw.end();
-        return;
-      }
-
-      const contentPart = outputItem.content[0];
-
-      sendEvent("response.created", {
-        response: {
-          ...response,
-          status: "in_progress"
+    if (!model) {
+      return reply.code(400).send({
+        error: {
+          message: "Missing required field: model",
+          type: "invalid_request_error",
+          param: "model"
         }
       });
+    }
 
-      sendEvent("response.output_item.added", {
-        response_id: response.id,
-        output_index: 0,
-        item: outputItem
-      });
-
-      if (contentPart) {
-        sendEvent("response.content_part.added", {
-          response_id: response.id,
-          item_id: outputItem.id,
-          output_index: 0,
-          content_index: 0,
-          part: contentPart
-        });
-
-        sendEvent("response.output_text.delta", {
-          response_id: response.id,
-          item_id: outputItem.id,
-          output_index: 0,
-          content_index: 0,
-          delta: contentPart.text
-        });
-
-        sendEvent("response.output_text.done", {
-          response_id: response.id,
-          item_id: outputItem.id,
-          output_index: 0,
-          content_index: 0,
-          text: contentPart.text
-        });
-
-        sendEvent("response.content_part.done", {
-          response_id: response.id,
-          item_id: outputItem.id,
-          output_index: 0,
-          content_index: 0,
-          part: contentPart
-        });
-      }
-
-      sendEvent("response.output_item.done", {
-        response_id: response.id,
-        output_index: 0,
-        item: outputItem
-      });
-
-      sendEvent("response.completed", {
-        response: {
-          ...response,
-          status: "completed"
+    if (!isSupportedModel(model)) {
+      return reply.code(400).send({
+        error: {
+          message: `Unsupported model: ${model}`,
+          type: "invalid_request_error",
+          param: "model"
         }
       });
-
-      reply.raw.write(
-        "data: [DONE]\n\n"
-      );
-
-      reply.raw.end();
-
-      return;
     }
 
     const result = await kiraChat(chatRequest);
@@ -207,8 +124,9 @@ app.post("/v1/responses", async (request, reply) => {
       chatToResponses(result.data);
 
     return reply.send(responsesResult);
-
   } catch (error) {
+    console.error("Responses API error:", error);
+
     return reply.code(500).send({
       error: {
         message:
@@ -220,26 +138,74 @@ app.post("/v1/responses", async (request, reply) => {
   }
 });
 
-const port = Number(
-  process.env.KIRAAIROUTE_PORT || 4010
-);
+async function findAvailablePort(
+  startPort: number
+): Promise<number> {
+  for (
+    let port = startPort;
+    port <= startPort + 20;
+    port++
+  ) {
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const server = net.createServer();
 
-try {
-  getKiraApiKey();
+        server.once("error", reject);
 
-  await app.listen({
-    host: "127.0.0.1",
-    port
-  });
+        server.once("listening", () => {
+          server.close(() => resolve());
+        });
 
-console.log("");
-console.log("KiraAI Route is running");
-console.log("");
-console.log(`API:    http://127.0.0.1:${port}/v1`);
-console.log(`Models: http://127.0.0.1:${port}/v1/models`);
-console.log("");
-console.log("Press Ctrl+C to stop.");
-} catch (error) {
-console.error("KiraAI Route error:", error);
-  process.exit(1);
+        server.listen(port, "127.0.0.1");
+      });
+
+      return port;
+    } catch {
+      // Try next port.
+    }
+  }
+
+  throw new Error(
+    `No available port found between ${startPort} and ${
+      startPort + 20
+    }.`
+  );
 }
+
+async function start() {
+  try {
+    getKiraApiKey();
+
+    const requestedPort = Number(
+      process.env.KIRAAIROUTE_PORT || 4010
+    );
+
+    const port = await findAvailablePort(requestedPort);
+
+    if (port !== requestedPort) {
+      console.log(
+        `Port ${requestedPort} is busy. Using port ${port} instead.`
+      );
+    }
+
+    await app.listen({
+      host: "127.0.0.1",
+      port
+    });
+
+    console.log("");
+    console.log("KiraAI Route is running");
+    console.log("");
+    console.log(`API:    http://127.0.0.1:${port}/v1`);
+    console.log(
+      `Models: http://127.0.0.1:${port}/v1/models`
+    );
+    console.log("");
+    console.log("Press Ctrl+C to stop.");
+  } catch (error) {
+    console.error("KiraAI Route error:", error);
+    process.exit(1);
+  }
+}
+
+await start();
