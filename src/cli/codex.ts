@@ -30,7 +30,7 @@ export function updateCodexTomlContent(content: string, model: string, baseUrl: 
   }
 
   // 3. Update or insert [model_providers.kira] section using standard chat wire_api for full tool execution
-  const kiraSection = `[model_providers.kira]\nname = "Kira AI"\nbase_url = "${baseUrl}"\nenv_key = "KIRA_API_KEY"\nwire_api = "chat"`;
+  const kiraSection = `[model_providers.kira]\nname = "KiraAI Route"\nbase_url = "${baseUrl}"\nenv_key = "KIRA_API_KEY"\nwire_api = "chat"`;
   const kiraSectionRegex = /\[model_providers\.kira\][^\[]*/;
 
   if (kiraSectionRegex.test(updated)) {
