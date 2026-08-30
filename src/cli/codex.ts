@@ -29,8 +29,8 @@ export function updateCodexTomlContent(content: string, model: string, baseUrl: 
     updated = updated.replace(/^model\s*=\s*.*$/m, (m) => `${m}\nmodel_provider = "kira"`);
   }
 
-  // 3. Update or insert [model_providers.kira] section
-  const kiraSection = `[model_providers.kira]\nname = "Kira AI"\nbase_url = "${baseUrl}"\nenv_key = "KIRA_API_KEY"\nwire_api = "responses"`;
+  // 3. Update or insert [model_providers.kira] section using standard chat wire_api for full tool execution
+  const kiraSection = `[model_providers.kira]\nname = "Kira AI"\nbase_url = "${baseUrl}"\nenv_key = "KIRA_API_KEY"\nwire_api = "chat"`;
   const kiraSectionRegex = /\[model_providers\.kira\][^\[]*/;
 
   if (kiraSectionRegex.test(updated)) {

@@ -297,15 +297,15 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
           reply.raw.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
         };
 
+        let currentCallId = "";
+        let currentCallName = "";
+        let currentCallArgs = "";
+        let functionItemAdded = false;
+        let messageItemAdded = false;
+
         send("response.created", {
           type: "response.created",
           response: { id: responseId, object: "response", model: responseRequest.model, output: [] }
-        });
-
-        send("response.output_item.added", {
-          type: "response.output_item.added",
-          output_index: 0,
-          item: { id: messageId, type: "message", role: "assistant", content: [] }
         });
 
         try {
@@ -330,20 +330,64 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
               let parsed: any;
               try { parsed = JSON.parse(dataText); } catch { continue; }
 
-              const delta = parsed?.choices?.[0]?.delta?.content;
-              if (typeof delta === "string" && delta.length > 0) {
-                outputText += delta;
+              if (parsed?.id && typeof parsed.id === "string") {
+                responseId = `resp_${parsed.id}`;
+              }
+
+              const choice = parsed?.choices?.[0];
+              const delta = choice?.delta;
+
+              // Text content delta
+              const textDelta = delta?.content;
+              if (typeof textDelta === "string" && textDelta.length > 0) {
+                if (!messageItemAdded) {
+                  messageItemAdded = true;
+                  send("response.output_item.added", {
+                    type: "response.output_item.added",
+                    output_index: 0,
+                    item: { id: messageId, type: "message", role: "assistant", content: [] }
+                  });
+                }
+                outputText += textDelta;
                 send("response.output_text.delta", {
                   type: "response.output_text.delta",
                   item_id: messageId,
                   output_index: 0,
                   content_index: 0,
-                  delta
+                  delta: textDelta
                 });
               }
 
-              if (parsed?.id && typeof parsed.id === "string") {
-                responseId = `resp_${parsed.id}`;
+              // Tool calls delta
+              const toolCalls = delta?.tool_calls;
+              if (Array.isArray(toolCalls)) {
+                for (const tc of toolCalls) {
+                  if (tc.id) {
+                    currentCallId = tc.id;
+                  }
+                  if (tc.function?.name) {
+                    currentCallName = tc.function.name;
+                  }
+                  if (!functionItemAdded && (currentCallId || currentCallName)) {
+                    functionItemAdded = true;
+                    if (!currentCallId) currentCallId = `call_${crypto.randomUUID()}`;
+                    send("response.output_item.added", {
+                      type: "response.output_item.added",
+                      output_index: messageItemAdded ? 1 : 0,
+                      item: { id: currentCallId, type: "function_call", name: currentCallName, arguments: "" }
+                    });
+                  }
+                  const argsChunk = tc.function?.arguments;
+                  if (typeof argsChunk === "string" && argsChunk.length > 0) {
+                    currentCallArgs += argsChunk;
+                    send("response.function_call_arguments.delta", {
+                      type: "response.function_call_arguments.delta",
+                      item_id: currentCallId,
+                      output_index: messageItemAdded ? 1 : 0,
+                      delta: argsChunk
+                    });
+                  }
+                }
               }
             }
           }
@@ -351,24 +395,62 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
           reader.releaseLock();
         }
 
-        send("response.output_text.done", {
-          type: "response.output_text.done",
-          item_id: messageId,
-          output_index: 0,
-          content_index: 0,
-          text: outputText
-        });
+        const finalOutput: Array<any> = [];
 
-        send("response.output_item.done", {
-          type: "response.output_item.done",
-          output_index: 0,
-          item: {
+        if (messageItemAdded && outputText) {
+          send("response.output_text.done", {
+            type: "response.output_text.done",
+            item_id: messageId,
+            output_index: 0,
+            content_index: 0,
+            text: outputText
+          });
+
+          send("response.output_item.done", {
+            type: "response.output_item.done",
+            output_index: 0,
+            item: {
+              id: messageId,
+              type: "message",
+              role: "assistant",
+              content: [{ type: "output_text", text: outputText }]
+            }
+          });
+
+          finalOutput.push({
             id: messageId,
             type: "message",
             role: "assistant",
             content: [{ type: "output_text", text: outputText }]
-          }
-        });
+          });
+        }
+
+        if (functionItemAdded) {
+          send("response.function_call_arguments.done", {
+            type: "response.function_call_arguments.done",
+            item_id: currentCallId,
+            output_index: messageItemAdded ? 1 : 0,
+            arguments: currentCallArgs
+          });
+
+          send("response.output_item.done", {
+            type: "response.output_item.done",
+            output_index: messageItemAdded ? 1 : 0,
+            item: {
+              id: currentCallId,
+              type: "function_call",
+              name: currentCallName,
+              arguments: currentCallArgs
+            }
+          });
+
+          finalOutput.push({
+            id: currentCallId,
+            type: "function_call",
+            name: currentCallName,
+            arguments: currentCallArgs
+          });
+        }
 
         send("response.completed", {
           type: "response.completed",
@@ -376,14 +458,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
             id: responseId,
             object: "response",
             model: responseRequest.model,
-            output: [
-              {
-                id: messageId,
-                type: "message",
-                role: "assistant",
-                content: [{ type: "output_text", text: outputText }]
-              }
-            ]
+            output: finalOutput
           }
         });
 
