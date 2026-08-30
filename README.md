@@ -71,12 +71,23 @@ npm install -g @vibhav1207/kiraairoute
 kiraairoute
 ```
 
-### Method 3: Use as a Node.js / TypeScript SDK Module
+### Method 3: Clone & Run from Source (Git Clone)
 
-Add `kiraairoute` as a package dependency in your project:
+Clone the repository, build, and start locally from source:
 
 ```bash
-npm install @vibhav1207/kiraairoute
+# 1. Clone repository
+git clone https://github.com/Vibhav1207/kiraairoute.git
+cd kiraairoute
+
+# 2. Install dependencies
+npm install
+
+# 3. Build TypeScript to dist/
+npm run build
+
+# 4. Start gateway server
+npm start
 ```
 
 
