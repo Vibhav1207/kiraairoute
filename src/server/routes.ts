@@ -66,6 +66,16 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     }
   });
 
+  app.post("/api/launch-codex", async (_request, reply) => {
+    try {
+      const { exec } = await import("node:child_process");
+      exec("codex");
+      return { success: true, message: "Codex launch triggered." };
+    } catch {
+      return reply.code(500).send({ error: { message: "Could not launch Codex binary." } });
+    }
+  });
+
   // OpenAI Compatible Endpoints
   app.get("/v1/models", async () => {
     return {
