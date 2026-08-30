@@ -460,7 +460,7 @@ select:focus {
     <img src="/logo.png" alt="KiraAI Route Logo" class="brand-logo-img" onerror="this.style.display='none'">
     <div class="brand-text-group">
       <span class="brand-title">KiraAI Route</span>
-      <span class="version-pill">v0.1.4</span>
+      <span class="version-pill">v0.1.5</span>
     </div>
   </div>
   <div class="nav-status">
@@ -552,6 +552,9 @@ select:focus {
           <img src="/codex-logo.webp" class="btn-icon-img" alt="Codex Logo" onerror="this.style.display='none'">
           <span>Launch Codex</span>
         </button>
+        <button id="btnLaunchClaude" class="btn-launch" style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%); box-shadow: 0 4px 14px rgba(217, 119, 6, 0.3);" onclick="launchClaude()">
+          <span>⚡ Launch Claude Code</span>
+        </button>
         <button class="btn-secondary" onclick="copyEndpoint()">
           <span>📋 Copy API Endpoint</span>
         </button>
@@ -628,7 +631,7 @@ async function loadModels() {
     modelSelect.appendChild(g2);
     updateModelInspector();
   } catch {
-    showStatus("Could not load available models list.", "error");
+    showStatus("Could not load available models list. Gateway server may be offline.", "error");
   }
 }
 
@@ -658,7 +661,11 @@ startButton.addEventListener("click", async () => {
     showStatus("✓ Kira API connected successfully.", "success");
     showStatusPanel(model);
   } catch (error) {
-    showStatus(error instanceof Error ? error.message : "Something went wrong.", "error");
+    let msg = error instanceof Error ? error.message : "Something went wrong.";
+    if (msg === "Failed to fetch" || (error && error.name === "TypeError")) {
+      msg = "Failed to connect to local gateway server. Please ensure the terminal running 'npm start' or 'npx @vibhav1207/kiraairoute' is still open and running.";
+    }
+    showStatus(msg, "error");
   } finally {
     startButton.disabled = false;
   }
@@ -693,6 +700,21 @@ async function launchCodex() {
     }
   } catch {
     showStatus("Copied 'codex' command to clipboard. Paste in terminal to run.", "info");
+  }
+}
+
+async function launchClaude() {
+  navigator.clipboard.writeText("claude");
+  showStatus("Launching Claude Code app or terminal...", "info");
+  try {
+    const res = await fetch("/api/launch-claude", { method: "POST" });
+    if (res.ok) {
+      showStatus("✓ Launching Claude Code.", "success");
+    } else {
+      showStatus("Copied 'claude' command to clipboard. Paste in terminal to run.", "info");
+    }
+  } catch {
+    showStatus("Copied 'claude' command to clipboard. Paste in terminal to run.", "info");
   }
 }
 

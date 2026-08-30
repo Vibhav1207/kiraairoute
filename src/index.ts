@@ -11,4 +11,5 @@ export { responsesToChat, chatToResponses, createSseEvent } from "./protocols/re
 export type { ResponsesRequest } from "./protocols/responses.js";
 export type { ChatMessage, ChatCompletionRequest } from "./protocols/chat.js";
 export { getKiraApiKey, setKiraApiKey, hasKiraApiKey, getKiraModel, setKiraModel, loadConfig } from "./cli/config.js";
+export { autoConfigureAll, autoConfigureCodex, CODEX_CONFIG_FILE, CODEX_CONFIG_DIR } from "./cli/codex.js";
 export { DEFAULT_PORT, KIRA_BASE_URL, DEFAULT_MODEL, CONFIG_DIR, CONFIG_FILE } from "./config/constants.js";

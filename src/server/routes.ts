@@ -1,7 +1,9 @@
 import type { FastifyInstance } from "fastify";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { autoConfigureAll } from "../cli/codex.js";
 import { getKiraApiKey, getKiraModel, hasKiraApiKey, setKiraApiKey, setKiraModel } from "../cli/config.js";
+import { DEFAULT_PORT } from "../config/constants.js";
 import { kiraChat, kiraStream, testKiraConnection } from "../kira/client.js";
 import { getModel, getModels } from "../kira/models.js";
 import { chatToResponses, ResponsesRequest, responsesToChat } from "../protocols/responses.js";
@@ -71,9 +73,22 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
         return reply.code(400).send({ error: { message: `Unsupported model: ${body.model}` } });
       }
 
-      setKiraApiKey(body.apiKey.trim());
+      const apiKey = body.apiKey.trim();
+      setKiraApiKey(apiKey);
       setKiraModel(selectedModel.id);
-      return { success: true, model: selectedModel.id };
+
+      const host = request.headers.host || `127.0.0.1:${DEFAULT_PORT}`;
+      const protocol = (request.headers["x-forwarded-proto"] as string) || "http";
+      const baseUrl = `${protocol}://${host}/v1`;
+
+      const configResult = autoConfigureAll({ model: selectedModel.id, baseUrl, apiKey });
+
+      return {
+        success: true,
+        model: selectedModel.id,
+        codexConfigured: configResult.success,
+        codexPath: configResult.codexPath
+      };
     } catch (error) {
       return reply.code(500).send({
         error: { message: error instanceof Error ? error.message : "Setup failed." }
@@ -98,33 +113,47 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     }
   });
 
-  app.post("/api/launch-codex", async (_request, reply) => {
+  app.post("/api/launch-codex", async (request, reply) => {
     const { exec } = await import("node:child_process");
     const platform = process.platform;
+    const host = request.headers.host || `127.0.0.1:${DEFAULT_PORT}`;
+    const protocol = (request.headers["x-forwarded-proto"] as string) || "http";
+    const baseUrl = `${protocol}://${host}/v1`;
+    const model = getKiraModel();
+    const apiKey = hasKiraApiKey() ? getKiraApiKey() : "";
+
+    autoConfigureAll({ model, baseUrl, apiKey });
+
+    const env = {
+      ...process.env,
+      KIRA_API_KEY: apiKey,
+      OPENAI_API_KEY: apiKey,
+      OPENAI_BASE_URL: baseUrl
+    };
 
     return new Promise((resolve) => {
       if (platform === "win32") {
         // First try launching Desktop App directly
-        exec('start "" "codex"', (err) => {
+        exec('start "" "codex"', { env }, (err) => {
           if (err) {
             // Fallback to interactive terminal CLI
-            exec('start cmd /k "codex"');
+            exec('start cmd /k "codex"', { env });
           }
           resolve(reply.send({ success: true, message: "Codex launch triggered." }));
         });
       } else if (platform === "darwin") {
         // First try launching macOS App Bundle
-        exec('open -a "Codex"', (err) => {
+        exec('open -a "Codex"', { env }, (err) => {
           if (err) {
             // Fallback to macOS Terminal CLI
-            exec(`osascript -e 'tell application "Terminal" to do script "codex"'`);
+            exec(`osascript -e 'tell application "Terminal" to do script "codex"'`, { env });
           }
           resolve(reply.send({ success: true, message: "Codex launch triggered." }));
         });
       } else {
-        exec('codex', (err) => {
+        exec('codex', { env }, (err) => {
           if (err) {
-            exec('x-terminal-emulator -e "codex" || gnome-terminal -- codex');
+            exec('x-terminal-emulator -e "codex" || gnome-terminal -- codex', { env });
           }
           resolve(reply.send({ success: true, message: "Codex launch triggered." }));
         });
@@ -132,29 +161,39 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     });
   });
 
-  app.post("/api/launch-claude", async (_request, reply) => {
+  app.post("/api/launch-claude", async (request, reply) => {
     const { exec } = await import("node:child_process");
     const platform = process.platform;
+    const host = request.headers.host || `127.0.0.1:${DEFAULT_PORT}`;
+    const protocol = (request.headers["x-forwarded-proto"] as string) || "http";
+    const baseUrl = `${protocol}://${host}/v1`;
+    const apiKey = hasKiraApiKey() ? getKiraApiKey() : "";
+
+    const env = {
+      ...process.env,
+      ANTHROPIC_BASE_URL: baseUrl,
+      ANTHROPIC_API_KEY: apiKey
+    };
 
     return new Promise((resolve) => {
       if (platform === "win32") {
-        exec('start "" "claude"', (err) => {
+        exec('start "" "claude"', { env }, (err) => {
           if (err) {
-            exec('start cmd /k "claude || npx @anthropic-ai/claude-code"');
+            exec('start cmd /k "claude || npx @anthropic-ai/claude-code"', { env });
           }
           resolve(reply.send({ success: true, message: "Claude launch triggered." }));
         });
       } else if (platform === "darwin") {
-        exec('open -a "Claude Code" || open -a "Claude"', (err) => {
+        exec('open -a "Claude Code" || open -a "Claude"', { env }, (err) => {
           if (err) {
-            exec(`osascript -e 'tell application "Terminal" to do script "claude || npx @anthropic-ai/claude-code"'`);
+            exec(`osascript -e 'tell application "Terminal" to do script "claude || npx @anthropic-ai/claude-code"'`, { env });
           }
           resolve(reply.send({ success: true, message: "Claude launch triggered." }));
         });
       } else {
-        exec('claude', (err) => {
+        exec('claude', { env }, (err) => {
           if (err) {
-            exec('x-terminal-emulator -e "claude || npx @anthropic-ai/claude-code"');
+            exec('x-terminal-emulator -e "claude || npx @anthropic-ai/claude-code"', { env });
           }
           resolve(reply.send({ success: true, message: "Claude launch triggered." }));
         });

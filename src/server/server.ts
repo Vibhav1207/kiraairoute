@@ -1,4 +1,6 @@
 import Fastify, { FastifyInstance } from "fastify";
+import { autoConfigureAll } from "../cli/codex.js";
+import { getKiraApiKey, getKiraModel, hasKiraApiKey } from "../cli/config.js";
 import { DEFAULT_PORT } from "../config/constants.js";
 import { registerMiddleware } from "./middleware.js";
 import { registerRoutes } from "./routes.js";
@@ -24,6 +26,12 @@ export async function startServer(customPort?: number): Promise<{ app: FastifyIn
       }
       console.log(`KiraAI Route running at http://127.0.0.1:${port}`);
       console.log(`Web setup: http://127.0.0.1:${port}`);
+
+      // Auto-sync configuration and environment variables for Codex & Claude
+      const model = getKiraModel();
+      const apiKey = hasKiraApiKey() ? getKiraApiKey() : undefined;
+      autoConfigureAll({ model, baseUrl: `http://127.0.0.1:${port}/v1`, apiKey });
+
       return { app, port };
     } catch (error: any) {
       await app.close();
