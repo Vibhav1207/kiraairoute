@@ -18,7 +18,12 @@ export function responsesToChat(body: ResponsesRequest) {
   const messages: Array<{ role: string; content: string }> = [];
 
   if (typeof instructions === "string" && instructions.trim()) {
-    messages.push({ role: "system", content: instructions.trim() });
+    let cleanInstructions = instructions.trim();
+    // If bloated by 1,200 skills metadata (> 10k chars), condense gracefully so Kira AI processes it at top speed
+    if (cleanInstructions.length > 10000) {
+      cleanInstructions = cleanInstructions.slice(0, 10000) + "\n\n[Context streamlined for maximum performance]";
+    }
+    messages.push({ role: "system", content: cleanInstructions });
   }
 
   if (typeof inputData === "string" && inputData.trim()) {

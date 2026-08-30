@@ -329,22 +329,28 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
 
       // If Codex requested streaming
       if (body?.stream === true) {
+        const candidateModels = [
+          model,
+          ...(model !== "mimo-v2.5" ? ["mimo-v2.5"] : []),
+          ...(model !== "hy3" ? ["hy3"] : []),
+          ...(model !== "kira-2.0" ? ["kira-2.0"] : [])
+        ];
+
         let upstream: Response | null = null;
         let lastErrorText = "";
+        let successfulModel = model;
 
-        for (let attempt = 0; attempt < 3; attempt++) {
+        for (const candidate of candidateModels) {
           try {
-            upstream = await kiraStream({ ...chatPayload, stream: true });
-            if (upstream.ok && upstream.body) break;
-            lastErrorText = await upstream.text();
-            if (attempt < 2) {
-              await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+            const payload = { ...chatPayload, model: candidate, stream: true };
+            upstream = await kiraStream(payload, 8000);
+            if (upstream.ok && upstream.body) {
+              successfulModel = candidate;
+              break;
             }
+            lastErrorText = await upstream.text();
           } catch (e) {
             lastErrorText = e instanceof Error ? e.message : "Connection failed";
-            if (attempt < 2) {
-              await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
-            }
           }
         }
 
@@ -384,7 +390,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
             object: "response",
             created_at: now,
             status: "in_progress",
-            model,
+            model: successfulModel,
             output: [],
             usage: null
           }
@@ -532,7 +538,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
           object: "response",
           created_at: now,
           status: "completed",
-          model,
+          model: successfulModel,
           output: [completedItem],
           usage: {
             input_tokens: 100,
@@ -549,15 +555,32 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
         });
 
         reply.raw.end();
-        recordRequest(model, finalResponseObj.usage.total_tokens, Date.now() - startTime, 200);
+        recordRequest(successfulModel, finalResponseObj.usage.total_tokens, Date.now() - startTime, 200);
         return;
       }
 
       // Non-streaming fallback
-      const upstreamResult = await kiraChat(chatPayload, 2);
-      if (upstreamResult.status >= 400) {
-        recordRequest(model, 0, Date.now() - startTime, upstreamResult.status);
-        return reply.code(upstreamResult.status).send(upstreamResult.data);
+      const candidateModels = [
+        model,
+        ...(model !== "mimo-v2.5" ? ["mimo-v2.5"] : []),
+        ...(model !== "hy3" ? ["hy3"] : [])
+      ];
+
+      let upstreamResult: { status: number; data: unknown } | null = null;
+      let successfulModel = model;
+
+      for (const candidate of candidateModels) {
+        upstreamResult = await kiraChat({ ...chatPayload, model: candidate }, 1, 10000);
+        if (upstreamResult.status < 400) {
+          successfulModel = candidate;
+          break;
+        }
+      }
+
+      if (!upstreamResult || upstreamResult.status >= 400) {
+        const code = upstreamResult?.status || 502;
+        recordRequest(model, 0, Date.now() - startTime, code);
+        return reply.code(code).send(upstreamResult?.data);
       }
 
       const rawData = upstreamResult.data as any;
@@ -566,10 +589,10 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       const message = choice?.message || {};
       const text = (typeof message?.content === "string" && message.content) || message?.reasoning_content || "";
       const usage = rawData?.usage;
-      const responseObj = makeResponsesObject(text, usage, model);
+      const responseObj = makeResponsesObject(text, usage, successfulModel);
       const tokens = responseObj.usage.total_tokens;
 
-      recordRequest(model, tokens, Date.now() - startTime, 200);
+      recordRequest(successfulModel, tokens, Date.now() - startTime, 200);
       return reply.send(responseObj);
     } catch (error) {
       recordRequest(model, 0, Date.now() - startTime, 500);
