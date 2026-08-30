@@ -38,8 +38,6 @@ export async function startServer(customPort?: number): Promise<{ app: FastifyIn
   console.error(`Could not find an available port after ${maxAttempts} attempts starting from ${initialPort}.`);
   process.exit(1);
 }
-
-// Auto-run if executed directly as server entry point
 const isDirectEntry = process.argv[1]?.endsWith("server.js") || process.argv[1]?.endsWith("server.ts");
 if (isDirectEntry) {
   startServer().catch(() => process.exit(1));
