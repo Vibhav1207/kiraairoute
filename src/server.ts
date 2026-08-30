@@ -6,6 +6,7 @@ import {
   responsesToChat,
   chatToResponses
 } from "./protocols/responses.js";
+import { getModels } from "./models.js";
 
 const app = Fastify({
   logger: true
@@ -26,13 +27,7 @@ app.get("/", async () => {
 app.get("/v1/models", async () => {
   return {
     object: "list",
-    data: [
-      {
-        id: "kira-mini-1.0",
-        object: "model",
-        owned_by: "kira"
-      }
-    ]
+    data: getModels()
   };
 });
 
@@ -63,7 +58,13 @@ app.post("/v1/responses", async (request, reply) => {
     const chatRequest =
       responsesToChat(responseRequest);
 
-    // Codex expects an SSE stream when stream=true.
+    /*
+     * Codex uses stream=true.
+     *
+     * Kira's upstream Chat Completions endpoint
+     * is called normally, then we translate the
+     * result into a Responses-compatible SSE stream.
+     */
     if (responseRequest.stream === true) {
       const result = await kiraChat({
         ...chatRequest,
@@ -79,14 +80,17 @@ app.post("/v1/responses", async (request, reply) => {
       const response = chatToResponses(result.data);
 
       reply.raw.statusCode = 200;
+
       reply.raw.setHeader(
         "Content-Type",
         "text/event-stream"
       );
+
       reply.raw.setHeader(
         "Cache-Control",
         "no-cache, no-transform"
       );
+
       reply.raw.setHeader(
         "Connection",
         "keep-alive"
@@ -110,6 +114,26 @@ app.post("/v1/responses", async (request, reply) => {
         );
       };
 
+      const outputItem = response.output[0];
+
+      if (!outputItem) {
+        sendEvent("response.completed", {
+          response: {
+            ...response,
+            status: "completed"
+          }
+        });
+
+        reply.raw.write(
+          "data: [DONE]\n\n"
+        );
+
+        reply.raw.end();
+        return;
+      }
+
+      const contentPart = outputItem.content[0];
+
       sendEvent("response.created", {
         response: {
           ...response,
@@ -117,48 +141,45 @@ app.post("/v1/responses", async (request, reply) => {
         }
       });
 
-      const outputItem = response.output[0];
-
       sendEvent("response.output_item.added", {
         response_id: response.id,
         output_index: 0,
         item: outputItem
       });
 
-      const contentPart =
-        outputItem.content[0];
+      if (contentPart) {
+        sendEvent("response.content_part.added", {
+          response_id: response.id,
+          item_id: outputItem.id,
+          output_index: 0,
+          content_index: 0,
+          part: contentPart
+        });
 
-      sendEvent("response.content_part.added", {
-        response_id: response.id,
-        item_id: outputItem.id,
-        output_index: 0,
-        content_index: 0,
-        part: contentPart
-      });
+        sendEvent("response.output_text.delta", {
+          response_id: response.id,
+          item_id: outputItem.id,
+          output_index: 0,
+          content_index: 0,
+          delta: contentPart.text
+        });
 
-      sendEvent("response.output_text.delta", {
-        response_id: response.id,
-        item_id: outputItem.id,
-        output_index: 0,
-        content_index: 0,
-        delta: contentPart.text
-      });
+        sendEvent("response.output_text.done", {
+          response_id: response.id,
+          item_id: outputItem.id,
+          output_index: 0,
+          content_index: 0,
+          text: contentPart.text
+        });
 
-      sendEvent("response.output_text.done", {
-        response_id: response.id,
-        item_id: outputItem.id,
-        output_index: 0,
-        content_index: 0,
-        text: contentPart.text
-      });
-
-      sendEvent("response.content_part.done", {
-        response_id: response.id,
-        item_id: outputItem.id,
-        output_index: 0,
-        content_index: 0,
-        part: contentPart
-      });
+        sendEvent("response.content_part.done", {
+          response_id: response.id,
+          item_id: outputItem.id,
+          output_index: 0,
+          content_index: 0,
+          part: contentPart
+        });
+      }
 
       sendEvent("response.output_item.done", {
         response_id: response.id,
@@ -182,7 +203,9 @@ app.post("/v1/responses", async (request, reply) => {
       return;
     }
 
-    // Normal non-streaming Responses request.
+    /*
+     * Normal non-streaming Responses API request.
+     */
     const result = await kiraChat(chatRequest);
 
     if (result.status >= 400) {
