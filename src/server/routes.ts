@@ -6,7 +6,7 @@ import { getKiraApiKey, getKiraModel, hasKiraApiKey, setKiraApiKey, setKiraModel
 import { DEFAULT_PORT } from "../config/constants.js";
 import { kiraChat, kiraStream, testKiraConnection, translateErrorMessage } from "../kira/client.js";
 import { getModel, getModels } from "../kira/models.js";
-import { chatToResponses, ResponsesRequest, responsesToChat } from "../protocols/responses.js";
+import { makeResponsesObject, ResponsesRequest, responsesToChat } from "../protocols/responses.js";
 import { getMetrics, recordRequest } from "./metrics.js";
 import { getWebPageHtml } from "./ui.js";
 
@@ -321,45 +321,32 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
 
   app.post("/v1/responses", async (request, reply) => {
     const startTime = Date.now();
+    const body = request.body as ResponsesRequest;
+    const model = body?.model || getKiraModel();
+
     try {
-      const responseRequest = request.body as ResponsesRequest;
-      const chatRequest = responsesToChat(responseRequest);
-      const model = responseRequest.model || getKiraModel();
+      const chatPayload = responsesToChat(body);
 
-      if (responseRequest.stream === true) {
-        let upstream: Response | null = null;
-        let lastErrorText = "";
+      // Fetch from upstream Kira AI with automatic retry
+      const upstreamResult = await kiraChat(chatPayload, 2);
+      if (upstreamResult.status >= 400) {
+        recordRequest(model, 0, Date.now() - startTime, upstreamResult.status);
+        return reply.code(upstreamResult.status).send(upstreamResult.data);
+      }
 
-        for (let attempt = 0; attempt < 3; attempt++) {
-          try {
-            upstream = await kiraStream({ ...chatRequest, stream: true });
-            if (upstream.ok && upstream.body) break;
-            lastErrorText = await upstream.text();
-            if (attempt < 2) {
-              await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
-            }
-          } catch (e) {
-            lastErrorText = e instanceof Error ? e.message : "Connection failed";
-            if (attempt < 2) {
-              await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
-            }
-          }
-        }
+      const rawData = upstreamResult.data as any;
+      const choices = rawData?.choices || [];
+      const choice = choices[0] || {};
+      const message = choice?.message || {};
+      const text = typeof message?.content === "string" ? message.content : "";
+      const usage = rawData?.usage;
+      const responseObj = makeResponsesObject(text, usage, model);
+      const tokens = responseObj.usage.total_tokens;
 
-        if (!upstream || !upstream.ok || !upstream.body) {
-          recordRequest(model, 0, Date.now() - startTime, upstream?.status || 502);
-          let errorObj: any;
-          try {
-            errorObj = JSON.parse(lastErrorText);
-            if (errorObj?.error?.message && typeof errorObj.error.message === "string") {
-              errorObj.error.message = translateErrorMessage(errorObj.error.message);
-            }
-          } catch {
-            errorObj = { error: { message: translateErrorMessage(lastErrorText) } };
-          }
-          return reply.code(upstream?.status || 502).send(errorObj);
-        }
+      recordRequest(model, tokens, Date.now() - startTime, 200);
 
+      // If Codex requested streaming
+      if (body?.stream === true) {
         reply.hijack();
         reply.raw.statusCode = 200;
         reply.raw.setHeader("Content-Type", "text/event-stream");
@@ -367,204 +354,111 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
         reply.raw.setHeader("Connection", "keep-alive");
         reply.raw.setHeader("X-Accel-Buffering", "no");
 
-        const reader = upstream.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-        let responseId = `resp_${crypto.randomUUID()}`;
-        let messageId = `msg_${crypto.randomUUID()}`;
-        let outputText = "";
+        const rid = responseObj.id;
+        const mid = responseObj.output[0].id;
+        const now = responseObj.created_at;
 
-        const send = (event: string, data: unknown) => {
+        const sse = (event: string, data: unknown) => {
           reply.raw.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
         };
 
-        let currentCallId = "";
-        let currentCallName = "";
-        let currentCallArgs = "";
-        let functionItemAdded = false;
-        let messageItemAdded = false;
-
-        send("response.created", {
+        sse("response.created", {
           type: "response.created",
-          response: { id: responseId, object: "response", model: responseRequest.model, output: [] }
+          response: {
+            id: rid,
+            object: "response",
+            created_at: now,
+            status: "in_progress",
+            model,
+            output: [],
+            usage: null
+          }
         });
 
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-            const events = buffer.split(/\r?\n\r?\n/);
-            buffer = events.pop() || "";
-
-            for (const event of events) {
-              const lines = event.split(/\r?\n/);
-              let dataText = "";
-              for (const line of lines) {
-                if (line.startsWith("data:")) {
-                  dataText += line.slice(5).trim();
-                }
-              }
-              if (!dataText || dataText === "[DONE]") continue;
-
-              let parsed: any;
-              try { parsed = JSON.parse(dataText); } catch { continue; }
-
-              if (parsed?.id && typeof parsed.id === "string") {
-                responseId = `resp_${parsed.id}`;
-              }
-
-              const choice = parsed?.choices?.[0];
-              const delta = choice?.delta;
-
-              // Text content delta
-              const textDelta = delta?.content;
-              if (typeof textDelta === "string" && textDelta.length > 0) {
-                if (!messageItemAdded) {
-                  messageItemAdded = true;
-                  send("response.output_item.added", {
-                    type: "response.output_item.added",
-                    output_index: 0,
-                    item: { id: messageId, type: "message", role: "assistant", content: [] }
-                  });
-                }
-                outputText += textDelta;
-                send("response.output_text.delta", {
-                  type: "response.output_text.delta",
-                  item_id: messageId,
-                  output_index: 0,
-                  content_index: 0,
-                  delta: textDelta
-                });
-              }
-
-              // Tool calls delta
-              const toolCalls = delta?.tool_calls;
-              if (Array.isArray(toolCalls)) {
-                for (const tc of toolCalls) {
-                  if (tc.id) {
-                    currentCallId = tc.id;
-                  }
-                  if (tc.function?.name) {
-                    currentCallName = tc.function.name;
-                  }
-                  if (!functionItemAdded && (currentCallId || currentCallName)) {
-                    functionItemAdded = true;
-                    if (!currentCallId) currentCallId = `call_${crypto.randomUUID()}`;
-                    send("response.output_item.added", {
-                      type: "response.output_item.added",
-                      output_index: messageItemAdded ? 1 : 0,
-                      item: { id: currentCallId, type: "function_call", name: currentCallName, arguments: "" }
-                    });
-                  }
-                  const argsChunk = tc.function?.arguments;
-                  if (typeof argsChunk === "string" && argsChunk.length > 0) {
-                    currentCallArgs += argsChunk;
-                    send("response.function_call_arguments.delta", {
-                      type: "response.function_call_arguments.delta",
-                      item_id: currentCallId,
-                      output_index: messageItemAdded ? 1 : 0,
-                      delta: argsChunk
-                    });
-                  }
-                }
-              }
-            }
-          }
-        } finally {
-          reader.releaseLock();
-        }
-
-        const finalOutput: Array<any> = [];
-
-        if (messageItemAdded && outputText) {
-          send("response.output_text.done", {
-            type: "response.output_text.done",
-            item_id: messageId,
-            output_index: 0,
-            content_index: 0,
-            text: outputText
-          });
-
-          send("response.output_item.done", {
-            type: "response.output_item.done",
-            output_index: 0,
-            item: {
-              id: messageId,
-              type: "message",
-              role: "assistant",
-              content: [{ type: "output_text", text: outputText }]
-            }
-          });
-
-          finalOutput.push({
-            id: messageId,
+        sse("response.output_item.added", {
+          type: "response.output_item.added",
+          response_id: rid,
+          output_index: 0,
+          item: {
             type: "message",
+            id: mid,
+            status: "in_progress",
             role: "assistant",
-            content: [{ type: "output_text", text: outputText }]
-          });
-        }
-
-        if (functionItemAdded) {
-          send("response.function_call_arguments.done", {
-            type: "response.function_call_arguments.done",
-            item_id: currentCallId,
-            output_index: messageItemAdded ? 1 : 0,
-            arguments: currentCallArgs
-          });
-
-          send("response.output_item.done", {
-            type: "response.output_item.done",
-            output_index: messageItemAdded ? 1 : 0,
-            item: {
-              id: currentCallId,
-              type: "function_call",
-              name: currentCallName,
-              arguments: currentCallArgs
-            }
-          });
-
-          finalOutput.push({
-            id: currentCallId,
-            type: "function_call",
-            name: currentCallName,
-            arguments: currentCallArgs
-          });
-        }
-
-        send("response.completed", {
-          type: "response.completed",
-          response: {
-            id: responseId,
-            object: "response",
-            model: responseRequest.model,
-            output: finalOutput
+            content: []
           }
+        });
+
+        sse("response.content_part.added", {
+          type: "response.content_part.added",
+          response_id: rid,
+          item_id: mid,
+          output_index: 0,
+          content_index: 0,
+          part: {
+            type: "output_text",
+            text: "",
+            annotations: []
+          }
+        });
+
+        if (text) {
+          const chunks = text.match(/\S+\s*/g) || [text];
+          for (const chunk of chunks) {
+            sse("response.output_text.delta", {
+              type: "response.output_text.delta",
+              response_id: rid,
+              item_id: mid,
+              output_index: 0,
+              content_index: 0,
+              delta: chunk
+            });
+          }
+        }
+
+        sse("response.output_text.done", {
+          type: "response.output_text.done",
+          response_id: rid,
+          item_id: mid,
+          output_index: 0,
+          content_index: 0,
+          text
+        });
+
+        sse("response.content_part.done", {
+          type: "response.content_part.done",
+          response_id: rid,
+          item_id: mid,
+          output_index: 0,
+          content_index: 0,
+          part: {
+            type: "output_text",
+            text,
+            annotations: []
+          }
+        });
+
+        sse("response.output_item.done", {
+          type: "response.output_item.done",
+          response_id: rid,
+          output_index: 0,
+          item: responseObj.output[0]
+        });
+
+        sse("response.completed", {
+          type: "response.completed",
+          response: responseObj
         });
 
         reply.raw.end();
-        recordRequest(model, 0, Date.now() - startTime, 200);
         return;
       }
 
-      const result = await kiraChat(chatRequest);
-      if (result.status >= 400) {
-        recordRequest(model, 0, Date.now() - startTime, result.status);
-        return reply.code(result.status).send(result.data);
-      }
-
-      const responsesResult = chatToResponses(result.data);
-      const tokens = responsesResult?.usage?.total_tokens || 0;
-      recordRequest(model, tokens, Date.now() - startTime, 200);
-      return reply.send(responsesResult);
+      return reply.send(responseObj);
     } catch (error) {
-      recordRequest("unknown", 0, Date.now() - startTime, 500);
-      if (!reply.sent) {
-        return reply.code(500).send({
-          error: { message: error instanceof Error ? error.message : "Unknown error" }
-        });
-      }
+      recordRequest(model, 0, Date.now() - startTime, 500);
+      return reply.code(500).send({
+        error: { message: error instanceof Error ? error.message : "Bridge error" }
+      });
     }
   });
 }

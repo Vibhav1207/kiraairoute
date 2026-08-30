@@ -7,7 +7,7 @@ export { getWebPageHtml } from "./server/ui.js";
 export { kiraChat, kiraStream, testKiraConnection, translateErrorMessage } from "./kira/client.js";
 export { getModels, getModel, KIRA_MODELS } from "./kira/models.js";
 export type { ModelDefinition } from "./kira/models.js";
-export { responsesToChat, chatToResponses, createSseEvent } from "./protocols/responses.js";
+export { responsesToChat, makeResponsesObject, createSseEvent } from "./protocols/responses.js";
 export type { ResponsesRequest } from "./protocols/responses.js";
 export type { ChatMessage, ChatCompletionRequest } from "./protocols/chat.js";
 export { getKiraApiKey, setKiraApiKey, hasKiraApiKey, getKiraModel, setKiraModel, loadConfig } from "./cli/config.js";
