@@ -7,6 +7,14 @@
   "bin": {
     "kiraairoute": "dist/cli/cli.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vibhav1207/kiraairoute.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Vibhav1207/kiraairoute/issues"
+  },
+  "homepage": "https://github.com/Vibhav1207/kiraairoute#readme",
   "files": [
     "dist",
     "README.md",
