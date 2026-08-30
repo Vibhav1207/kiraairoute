@@ -249,20 +249,37 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
 
     try {
       if (body?.stream === true) {
-        const upstream = await kiraStream(body);
-        if (!upstream.ok || !upstream.body) {
-          const text = await upstream.text();
-          recordRequest(model, 0, Date.now() - startTime, upstream.status);
+        let upstream: Response | null = null;
+        let lastErrorText = "";
+
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            upstream = await kiraStream(body);
+            if (upstream.ok && upstream.body) break;
+            lastErrorText = await upstream.text();
+            if (attempt < 2) {
+              await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
+            }
+          } catch (e) {
+            lastErrorText = e instanceof Error ? e.message : "Connection failed";
+            if (attempt < 2) {
+              await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
+            }
+          }
+        }
+
+        if (!upstream || !upstream.ok || !upstream.body) {
+          recordRequest(model, 0, Date.now() - startTime, upstream?.status || 502);
           let errorObj: any;
           try {
-            errorObj = JSON.parse(text);
+            errorObj = JSON.parse(lastErrorText);
             if (errorObj?.error?.message && typeof errorObj.error.message === "string") {
               errorObj.error.message = translateErrorMessage(errorObj.error.message);
             }
           } catch {
-            errorObj = { error: { message: translateErrorMessage(text) } };
+            errorObj = { error: { message: translateErrorMessage(lastErrorText) } };
           }
-          return reply.code(upstream.status).send(errorObj);
+          return reply.code(upstream?.status || 502).send(errorObj);
         }
 
         reply.hijack();
@@ -310,20 +327,37 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       const model = responseRequest.model || getKiraModel();
 
       if (responseRequest.stream === true) {
-        const upstream = await kiraStream({ ...chatRequest, stream: true });
-        if (!upstream.ok || !upstream.body) {
-          const text = await upstream.text();
-          recordRequest(model, 0, Date.now() - startTime, upstream.status);
+        let upstream: Response | null = null;
+        let lastErrorText = "";
+
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            upstream = await kiraStream({ ...chatRequest, stream: true });
+            if (upstream.ok && upstream.body) break;
+            lastErrorText = await upstream.text();
+            if (attempt < 2) {
+              await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
+            }
+          } catch (e) {
+            lastErrorText = e instanceof Error ? e.message : "Connection failed";
+            if (attempt < 2) {
+              await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
+            }
+          }
+        }
+
+        if (!upstream || !upstream.ok || !upstream.body) {
+          recordRequest(model, 0, Date.now() - startTime, upstream?.status || 502);
           let errorObj: any;
           try {
-            errorObj = JSON.parse(text);
+            errorObj = JSON.parse(lastErrorText);
             if (errorObj?.error?.message && typeof errorObj.error.message === "string") {
               errorObj.error.message = translateErrorMessage(errorObj.error.message);
             }
           } catch {
-            errorObj = { error: { message: translateErrorMessage(text) } };
+            errorObj = { error: { message: translateErrorMessage(lastErrorText) } };
           }
-          return reply.code(upstream.status).send(errorObj);
+          return reply.code(upstream?.status || 502).send(errorObj);
         }
 
         reply.hijack();
