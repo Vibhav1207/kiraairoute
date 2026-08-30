@@ -50,11 +50,12 @@ http://127.0.0.1:4010/v1
 
 ## ✨ Key Features
 
+- ⚙️ **Automatic Zero-Config Setup**: Automatically synchronizes `~/.codex/config.toml` and system environment variables (`OPENAI_BASE_URL`, `ANTHROPIC_BASE_URL`, `KIRA_API_KEY`) so Codex and Claude Code work instantly without manual file edits.
 - 🔌 **Dual Protocol Support**: Native OpenAI `/v1/chat/completions` and `/v1/responses` endpoints with automatic format conversion.
 - ⚡ **Real-Time Streaming**: High-speed Server-Sent Events (SSE) streaming for real-time response rendering in coding assistants.
 - 🔒 **Secure Local Key Storage**: API keys are saved locally in `~/.kiraairoute/config.json`. Keys are never transmitted anywhere except directly to official Kira AI endpoints (`https://kiraai.vn/api/v1`).
-- 🔄 **Automatic Port Fallback**: If port `4010` is occupied, the gateway automatically finds and binds to the next available port (`4011`, `4012`, etc.) and routes the web dashboard.
-- 📊 **Developer Web Dashboard & Metrics**: Built-in visual dashboard featuring a password visibility eye toggle, model metadata inspector, and real-time request metrics table (`Time`, `Model`, `Tokens`, `Latency`, `Status`).
+- 🔄 **Automatic Port Fallback**: If port `4010` is occupied, the gateway automatically finds and binds to the next available port (`4011`, `4012`, etc.) and routes the web dashboard & Codex config.
+- 📊 **Developer Web Dashboard & Metrics**: Built-in visual dashboard featuring one-click Codex/Claude launchers, password visibility toggle, model inspector, and real-time request metrics.
 - 🌐 **Environment Variable Overrides**: Support for `KIRA_API_KEY`, `KIRA_MODEL`, and `KIRAAIROUTE_PORT` for headless CI/CD and container workflows.
 
 ---
@@ -113,15 +114,43 @@ Kira AI provides generous daily token allowances for the following supported mod
 
 ---
 
-## 💻 Connecting Codex, Cursor & AI Tools
+## 💻 Connecting Codex, Claude Code, Cursor & AI Tools
 
-Point your preferred AI coding tools to your local gateway:
+KiraAI Route **automatically configures Codex and Claude Code** upon startup and model selection. You can also connect any custom OpenAI or Anthropic tool manually:
 
 - **Base URL**: `http://127.0.0.1:4010/v1`
 - **API Key**: Your Kira API Key (or any placeholder string if configured in Web UI)
 - **Model**: Any model ID listed above (e.g. `kira-mini-1.0`)
 
-### OpenAI Node.js SDK Example
+### 1. Codex (Automatic)
+
+When you click **Test & Start Gateway** in the dashboard, your `~/.codex/config.toml` is automatically configured:
+
+```toml
+model = "kira-mini-1.0"
+model_provider = "kira"
+
+[model_providers.kira]
+name = "Kira AI"
+base_url = "http://127.0.0.1:4010/v1"
+env_key = "KIRA_API_KEY"
+wire_api = "responses"
+```
+
+You can click **Launch Codex** in the dashboard or run `codex` directly from your terminal.
+
+### 2. Claude Code (Automatic)
+
+When you click **Test & Start Gateway**, system environment variables `ANTHROPIC_BASE_URL` and `ANTHROPIC_API_KEY` are automatically registered:
+
+```bash
+# Launch Claude Code directly
+claude
+```
+
+Or click **⚡ Launch Claude Code** directly from the web dashboard.
+
+### 3. OpenAI Node.js SDK Example
 
 ```typescript
 import OpenAI from "openai";
@@ -139,7 +168,7 @@ const completion = await client.chat.completions.create({
 console.log(completion.choices[0].message.content);
 ```
 
-### OpenAI Python SDK Example
+### 4. OpenAI Python SDK Example
 
 ```python
 from openai import OpenAI
@@ -219,6 +248,7 @@ kiraairoute/
 ├── src/
 │   ├── cli/
 │   │   ├── cli.ts        # Main CLI executable script
+│   │   ├── codex.ts      # Zero-config setup for Codex config.toml & env vars
 │   │   ├── config.ts     # Configuration loading & file persistence
 │   │   └── ui.ts         # Terminal banner & browser launcher
 │   ├── server/
