@@ -77,10 +77,29 @@ export function responsesToChat(request: ResponsesRequest) {
     }
   }
 
+  // Normalize tools to standard Chat Completions format
+  let tools: any = undefined;
+  if (Array.isArray(request.tools)) {
+    tools = request.tools.map((t: any) => {
+      if (typeof t !== "object" || t === null) return t;
+      if (t.type === "function" && !t.function && t.name) {
+        return {
+          type: "function",
+          function: {
+            name: t.name,
+            description: t.description || "",
+            parameters: t.parameters || { type: "object", properties: {} }
+          }
+        };
+      }
+      return t;
+    });
+  }
+
   return {
     model: request.model,
     messages,
-    ...(request.tools !== undefined ? { tools: request.tools } : {}),
+    ...(tools !== undefined ? { tools } : {}),
     ...(request.tool_choice !== undefined ? { tool_choice: request.tool_choice } : {}),
     ...(request.temperature !== undefined ? { temperature: request.temperature } : {}),
     ...(request.max_output_tokens !== undefined ? { max_tokens: request.max_output_tokens } : {}),
