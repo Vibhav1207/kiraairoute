@@ -1,6 +1,6 @@
 {
   "name": "kiraairoute",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Open-source gateway for using Kira AI with OpenAI-compatible clients.",
   "type": "module",
   "main": "dist/server.js",
