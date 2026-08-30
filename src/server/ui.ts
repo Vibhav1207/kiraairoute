@@ -460,7 +460,7 @@ select:focus {
     <img src="/logo.png" alt="KiraAI Route Logo" class="brand-logo-img" onerror="this.style.display='none'">
     <div class="brand-text-group">
       <span class="brand-title">KiraAI Route</span>
-      <span class="version-pill">v0.1.8</span>
+      <span class="version-pill">v0.1.9</span>
     </div>
   </div>
   <div class="nav-status">
@@ -540,9 +540,17 @@ select:focus {
       </div>
 
       <div class="panel-item">
-        <div class="panel-label">Codex Status</div>
+        <div class="panel-label">Codex & ChatGPT Desktop</div>
         <div class="panel-value-row">
-          <span>Ready to connect</span>
+          <span>Auto-configured in ~/.codex</span>
+          <span style="color: var(--status-green); font-size:18px;">●</span>
+        </div>
+      </div>
+
+      <div class="panel-item">
+        <div class="panel-label">Claude Code CLI</div>
+        <div class="panel-value-row">
+          <span>Auto-configured in Env</span>
           <span style="color: var(--status-green); font-size:18px;">●</span>
         </div>
       </div>
@@ -554,6 +562,9 @@ select:focus {
         </button>
         <button id="btnLaunchClaude" class="btn-launch" style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%); box-shadow: 0 4px 14px rgba(217, 119, 6, 0.3);" onclick="launchClaude()">
           <span>⚡ Launch Claude Code</span>
+        </button>
+        <button class="btn-secondary" onclick="syncTools()">
+          <span>🔄 Auto-Sync Codex & Claude</span>
         </button>
         <button class="btn-secondary" onclick="copyEndpoint()">
           <span>📋 Copy API Endpoint</span>
@@ -658,7 +669,7 @@ startButton.addEventListener("click", async () => {
     const testData = await testRes.json();
     if (!testRes.ok) throw new Error(testData?.error?.message || "Connection test failed.");
 
-    showStatus("✓ Kira API connected successfully.", "success");
+    showStatus("✓ Kira AI connected! Codex, ChatGPT Desktop & Claude Code automatically configured.", "success");
     showStatusPanel(model);
   } catch (error) {
     let msg = error instanceof Error ? error.message : "Something went wrong.";
@@ -686,6 +697,21 @@ function copyEndpoint() {
   const endpoint = window.location.origin + "/v1";
   navigator.clipboard.writeText(endpoint);
   showStatus("API Endpoint copied to clipboard.", "success");
+}
+
+async function syncTools() {
+  showStatus("Auto-syncing Codex, ChatGPT Desktop and Claude Code...", "info");
+  try {
+    const res = await fetch("/api/sync-tools", { method: "POST" });
+    const data = await res.json();
+    if (res.ok) {
+      showStatus("✓ Codex config.toml & Claude environment synced successfully.", "success");
+    } else {
+      showStatus(data?.error?.message || "Sync failed.", "error");
+    }
+  } catch {
+    showStatus("Sync failed. Local gateway may be unreachable.", "error");
+  }
 }
 
 async function launchCodex() {

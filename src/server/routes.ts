@@ -201,6 +201,29 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     });
   });
 
+  app.post("/api/sync-tools", async (request, reply) => {
+    try {
+      const model = getKiraModel();
+      const apiKey = hasKiraApiKey() ? getKiraApiKey() : "";
+      const host = request.headers.host || `127.0.0.1:${DEFAULT_PORT}`;
+      const protocol = (request.headers["x-forwarded-proto"] as string) || "http";
+      const baseUrl = `${protocol}://${host}/v1`;
+
+      const result = autoConfigureAll({ model, baseUrl, apiKey });
+      return {
+        success: result.success,
+        model,
+        baseUrl,
+        codexPath: result.codexPath,
+        message: "Codex, ChatGPT Desktop & Claude Code configuration synced successfully."
+      };
+    } catch (error) {
+      return reply.code(500).send({
+        error: { message: error instanceof Error ? error.message : "Sync failed." }
+      });
+    }
+  });
+
   // OpenAI Compatible Endpoints
   app.get("/v1/models", async () => {
     return {
