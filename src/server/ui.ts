@@ -460,7 +460,7 @@ select:focus {
     <img src="/logo.png" alt="KiraAI Route Logo" class="brand-logo-img" onerror="this.style.display='none'">
     <div class="brand-text-group">
       <span class="brand-title">KiraAI Route</span>
-      <span class="version-pill">v0.2.0</span>
+      <span class="version-pill">v0.2.1</span>
     </div>
   </div>
   <div class="nav-status">
@@ -664,10 +664,6 @@ startButton.addEventListener("click", async () => {
     });
     const setupData = await setupRes.json();
     if (!setupRes.ok) throw new Error(setupData?.error?.message || "Setup failed.");
-
-    const testRes = await fetch("/api/test", { method: "POST" });
-    const testData = await testRes.json();
-    if (!testRes.ok) throw new Error(testData?.error?.message || "Connection test failed.");
 
     showStatus("✓ Kira AI connected! Codex, ChatGPT Desktop & Claude Code automatically configured.", "success");
     showStatusPanel(model);

@@ -77,6 +77,12 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       setKiraApiKey(apiKey);
       setKiraModel(selectedModel.id);
 
+      // Fast probe connection test (completes in ~1s)
+      const testResult = await testKiraConnection(selectedModel.id);
+      if (testResult.status >= 400) {
+        return reply.code(testResult.status).send(testResult.data);
+      }
+
       const host = request.headers.host || `127.0.0.1:${DEFAULT_PORT}`;
       const protocol = (request.headers["x-forwarded-proto"] as string) || "http";
       const baseUrl = `${protocol}://${host}/v1`;

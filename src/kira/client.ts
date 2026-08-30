@@ -105,10 +105,45 @@ export async function kiraStream(body: unknown): Promise<Response> {
   });
 }
 
-export async function testKiraConnection(): Promise<{ status: number; data: unknown }> {
-  return kiraChat({
-    model: getKiraModel(),
-    messages: [{ role: "user", content: "Hi" }],
-    max_tokens: 16
-  }, 3);
+export async function testKiraConnection(modelOverride?: string): Promise<{ status: number; data: unknown }> {
+  try {
+    const model = modelOverride || getKiraModel();
+    const res = await kiraStream({
+      model,
+      messages: [{ role: "user", content: "hi" }],
+      max_tokens: 1,
+      stream: true
+    });
+
+    if (res.status >= 400 || !res.ok) {
+      const text = await res.text();
+      let errObj: any;
+      try {
+        errObj = JSON.parse(text);
+        if (errObj?.error?.message && typeof errObj.error.message === "string") {
+          errObj.error.message = translateErrorMessage(errObj.error.message);
+        }
+      } catch {
+        errObj = { error: { message: translateErrorMessage(text) } };
+      }
+      return { status: res.status, data: errObj };
+    }
+
+    // Cancel stream immediately so we don't wait for LLM completion
+    if (res.body) {
+      const reader = res.body.getReader();
+      reader.cancel().catch(() => {});
+    }
+
+    return { status: 200, data: { success: true } };
+  } catch (err) {
+    return {
+      status: 502,
+      data: {
+        error: {
+          message: err instanceof Error ? translateErrorMessage(err.message) : "Unable to reach Kira AI."
+        }
+      }
+    };
+  }
 }
