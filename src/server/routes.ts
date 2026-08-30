@@ -327,26 +327,41 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     try {
       const chatPayload = responsesToChat(body);
 
-      // Fetch from upstream Kira AI with automatic retry
-      const upstreamResult = await kiraChat(chatPayload, 2);
-      if (upstreamResult.status >= 400) {
-        recordRequest(model, 0, Date.now() - startTime, upstreamResult.status);
-        return reply.code(upstreamResult.status).send(upstreamResult.data);
-      }
-
-      const rawData = upstreamResult.data as any;
-      const choices = rawData?.choices || [];
-      const choice = choices[0] || {};
-      const message = choice?.message || {};
-      const text = typeof message?.content === "string" ? message.content : "";
-      const usage = rawData?.usage;
-      const responseObj = makeResponsesObject(text, usage, model);
-      const tokens = responseObj.usage.total_tokens;
-
-      recordRequest(model, tokens, Date.now() - startTime, 200);
-
       // If Codex requested streaming
       if (body?.stream === true) {
+        let upstream: Response | null = null;
+        let lastErrorText = "";
+
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            upstream = await kiraStream({ ...chatPayload, stream: true });
+            if (upstream.ok && upstream.body) break;
+            lastErrorText = await upstream.text();
+            if (attempt < 2) {
+              await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+            }
+          } catch (e) {
+            lastErrorText = e instanceof Error ? e.message : "Connection failed";
+            if (attempt < 2) {
+              await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+            }
+          }
+        }
+
+        if (!upstream || !upstream.ok || !upstream.body) {
+          recordRequest(model, 0, Date.now() - startTime, upstream?.status || 502);
+          let errorObj: any;
+          try {
+            errorObj = JSON.parse(lastErrorText);
+            if (errorObj?.error?.message && typeof errorObj.error.message === "string") {
+              errorObj.error.message = translateErrorMessage(errorObj.error.message);
+            }
+          } catch {
+            errorObj = { error: { message: translateErrorMessage(lastErrorText) } };
+          }
+          return reply.code(upstream?.status || 502).send(errorObj);
+        }
+
         reply.hijack();
         reply.raw.statusCode = 200;
         reply.raw.setHeader("Content-Type", "text/event-stream");
@@ -354,9 +369,9 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
         reply.raw.setHeader("Connection", "keep-alive");
         reply.raw.setHeader("X-Accel-Buffering", "no");
 
-        const rid = responseObj.id;
-        const mid = responseObj.output[0].id;
-        const now = responseObj.created_at;
+        const rid = `resp_${crypto.randomUUID().replace(/-/g, "")}`;
+        const mid = `msg_${crypto.randomUUID().replace(/-/g, "")}`;
+        const now = Math.floor(Date.now() / 1000);
 
         const sse = (event: string, data: unknown) => {
           reply.raw.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
@@ -401,8 +416,62 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
           }
         });
 
-        if (text) {
-          const chunks = text.match(/\S+\s*/g) || [text];
+        const reader = upstream.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let fullText = "";
+        let fullReasoning = "";
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const events = buffer.split(/\r?\n\r?\n/);
+            buffer = events.pop() || "";
+
+            for (const event of events) {
+              const lines = event.split(/\r?\n/);
+              let dataText = "";
+              for (const line of lines) {
+                if (line.startsWith("data:")) {
+                  dataText += line.slice(5).trim();
+                }
+              }
+              if (!dataText || dataText === "[DONE]") continue;
+
+              let parsed: any;
+              try { parsed = JSON.parse(dataText); } catch { continue; }
+
+              const delta = parsed?.choices?.[0]?.delta;
+              const contentChunk = delta?.content;
+              const reasoningChunk = delta?.reasoning_content;
+
+              if (typeof contentChunk === "string" && contentChunk.length > 0) {
+                fullText += contentChunk;
+                sse("response.output_text.delta", {
+                  type: "response.output_text.delta",
+                  response_id: rid,
+                  item_id: mid,
+                  output_index: 0,
+                  content_index: 0,
+                  delta: contentChunk
+                });
+              } else if (typeof reasoningChunk === "string" && reasoningChunk.length > 0) {
+                fullReasoning += reasoningChunk;
+              }
+            }
+          }
+        } finally {
+          reader.releaseLock();
+        }
+
+        const finalText = fullText || fullReasoning || "Done.";
+
+        // If content was only in reasoning_content, stream it out now
+        if (!fullText && finalText) {
+          const chunks = finalText.match(/\S+\s*/g) || [finalText];
           for (const chunk of chunks) {
             sse("response.output_text.delta", {
               type: "response.output_text.delta",
@@ -421,7 +490,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
           item_id: mid,
           output_index: 0,
           content_index: 0,
-          text
+          text: finalText
         });
 
         sse("response.content_part.done", {
@@ -432,27 +501,75 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
           content_index: 0,
           part: {
             type: "output_text",
-            text,
+            text: finalText,
             annotations: []
           }
         });
+
+        const completedItem = {
+          type: "message",
+          id: mid,
+          status: "completed",
+          role: "assistant",
+          content: [
+            {
+              type: "output_text",
+              text: finalText,
+              annotations: []
+            }
+          ]
+        };
 
         sse("response.output_item.done", {
           type: "response.output_item.done",
           response_id: rid,
           output_index: 0,
-          item: responseObj.output[0]
+          item: completedItem
         });
+
+        const finalResponseObj = {
+          id: rid,
+          object: "response",
+          created_at: now,
+          status: "completed",
+          model,
+          output: [completedItem],
+          usage: {
+            input_tokens: 100,
+            input_tokens_details: { cached_tokens: 0 },
+            output_tokens: Math.max(1, Math.floor(finalText.length / 4)),
+            output_tokens_details: { reasoning_tokens: Math.floor(fullReasoning.length / 4) },
+            total_tokens: 100 + Math.max(1, Math.floor(finalText.length / 4))
+          }
+        };
 
         sse("response.completed", {
           type: "response.completed",
-          response: responseObj
+          response: finalResponseObj
         });
 
         reply.raw.end();
+        recordRequest(model, finalResponseObj.usage.total_tokens, Date.now() - startTime, 200);
         return;
       }
 
+      // Non-streaming fallback
+      const upstreamResult = await kiraChat(chatPayload, 2);
+      if (upstreamResult.status >= 400) {
+        recordRequest(model, 0, Date.now() - startTime, upstreamResult.status);
+        return reply.code(upstreamResult.status).send(upstreamResult.data);
+      }
+
+      const rawData = upstreamResult.data as any;
+      const choices = rawData?.choices || [];
+      const choice = choices[0] || {};
+      const message = choice?.message || {};
+      const text = (typeof message?.content === "string" && message.content) || message?.reasoning_content || "";
+      const usage = rawData?.usage;
+      const responseObj = makeResponsesObject(text, usage, model);
+      const tokens = responseObj.usage.total_tokens;
+
+      recordRequest(model, tokens, Date.now() - startTime, 200);
       return reply.send(responseObj);
     } catch (error) {
       recordRequest(model, 0, Date.now() - startTime, 500);
