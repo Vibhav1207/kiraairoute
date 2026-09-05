@@ -89,6 +89,24 @@ export const KIRA_MODELS: readonly ModelDefinition[] = [
     balance_required: true,
     daily_limit: "250M tokens/day",
     context_window: 1_000_000
+  },
+  {
+    id: "gpt-5.6-luna-free",
+    name: "GPT 5.6 Luna Free",
+    provider: "OpenAI",
+    free: true,
+    balance_required: true,
+    daily_limit: "250M tokens/day",
+    context_window: 1_000_000
+  },
+  {
+    id: "qwen3.8-27b-free",
+    name: "Qwen 3.8 27B Free",
+    provider: "Qwen",
+    free: true,
+    balance_required: true,
+    daily_limit: "250M tokens/day",
+    context_window: 128_000
   }
 ] as const;
 

@@ -111,6 +111,8 @@ Kira AI provides generous daily token allowances for the following supported mod
 | **Qwen 3.8 Flash** | `qwen3.8-flash` | Qwen | ⚠️ > 0 VND | 250M tokens/day | 128,000 |
 | **GLM 5.3 Flash** | `glm-5.3-flash` | GLM | ⚠️ > 0 VND | 250M tokens/day | 128,000 |
 | **GLM 5.3** | `glm-5.3` | GLM | ⚠️ > 0 VND | 250M tokens/day | 1,000,000 |
+| **GPT 5.6 Luna Free** | `gpt-5.6-luna-free` | OpenAI | ⚠️ > 0 VND | 250M tokens/day | 1,000,000 |
+| **Qwen 3.8 27B Free** | `qwen3.8-27b-free` | Qwen | ⚠️ > 0 VND | 250M tokens/day | 128,000 |
 
 ---
 
