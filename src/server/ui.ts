@@ -1,3 +1,22 @@
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+function getPackageVersion(): string {
+  try {
+    const pkgPath = join(__dirname, "..", "..", "package.json");
+    if (existsSync(pkgPath)) {
+      const data = JSON.parse(readFileSync(pkgPath, "utf-8"));
+      if (data?.version) return data.version;
+    }
+  } catch {}
+  return "0.3.8";
+}
+
+const currentVersion = getPackageVersion();
+
 export function getWebPageHtml(): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -596,7 +615,7 @@ select:focus {
     <img src="/logo.png" alt="KiraAI Route Logo" class="brand-logo-img" onerror="this.style.display='none'">
     <div class="brand-text-group">
       <span class="brand-title">KiraAI Route</span>
-      <span class="version-pill">v0.3.5</span>
+      <span class="version-pill">v${currentVersion}</span>
     </div>
   </div>
   <div class="nav-status">
