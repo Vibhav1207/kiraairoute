@@ -1,61 +1,61 @@
 ---
 name: kira-ai-api
-description: Hướng dẫn tích hợp Kira AI API (Chat OpenAI-compatible, tạo ảnh và tạo video) vào các dự án NodeJS, PHP, Python và WordPress. Sử dụng skill này khi cần viết code gọi API của Kira AI.
+description: Complete guide for integrating Kira AI API (OpenAI-compatible Chat, Image Generation, Video Generation, and TTS) into NodeJS, PHP, Python, and WordPress projects. Use this skill when writing code to invoke Kira AI APIs.
 ---
 
 # 🤖 Kira AI API Integration Skill
 
-Skill này cung cấp các tiêu chuẩn kết nối, cấu trúc Payload, danh sách Model và các mẫu code tối ưu (NodeJS, PHP, Python, WordPress) để lập trình viên dễ dàng tích hợp dịch vụ **Kira AI** vào mọi hệ thống.
+This skill provides connection standards, payload structures, model lists, and optimized code patterns (NodeJS, PHP, Python, WordPress) to enable developers to easily integrate **Kira AI** services into any application.
 
 ---
 
-## 🎯 Khi nào nên sử dụng Skill này
+## 🎯 When to Use This Skill
 
-- Khi dự án cần tích hợp tính năng **Trò chuyện (Chat / Assistant)** hoặc **Sinh nội dung tự động**.
-- Khi dự án cần tính năng **Tạo ảnh nghệ thuật / Hình ảnh minh họa** (Featured Image, Banner, Inline Content Images).
-- Khi dự án cần tính năng **Tạo video ngắn từ văn bản**.
-- Khi tích hợp Kira AI vào các nền tảng quản trị nội dung như **WordPress**, **Laravel**, hoặc **NodeJS App**.
+- When your project needs **Chat / Assistant** or **Automated Content Generation** capabilities.
+- When your project needs **AI Image Generation** (Featured Images, Banners, Inline Content Images).
+- When your project needs **Text-to-Video Short Generation**.
+- When integrating Kira AI into content management platforms like **WordPress**, **Laravel**, or **NodeJS Apps**.
 
 ---
 
-## 🔑 Thông tin API & Xác thực
+## 🔑 API Information & Authentication
 
-- **Base URL chính thức**: `https://kiraai.vn`
-- **Phương thức xác thực**: Gửi API Key qua Header `Authorization` dưới dạng Bearer Token:
+- **Official Base URL**: `https://kiraai.vn` (or local proxy `http://127.0.0.1:4010/v1`)
+- **Authentication Method**: Send API Key via the `Authorization` header as a Bearer token:
   ```http
   Authorization: Bearer YOUR_KIRA_API_KEY
   ```
 
-### 📋 Danh sách Models được hỗ trợ
+### 📋 Supported Models List
 
-| Model ID | Loại Model | Tính năng nổi bật |
+| Model ID | Model Type | Key Features |
 | :--- | :--- | :--- |
-| **`kira-mini-1.0`** | Chat / Text | Model AI miễn phí, đa năng, phù hợp cho hội thoại hàng ngày. Không tốn lượt token. |
-| **`kira-3.5-pro`** | Chat / Text | Kira 3.5 Pro nhắm thẳng vào tốc độ phản hồi cực nhanh, khả năng lập trình chuyên sâu. |
-| **`kira-3.5-flash`** | Chat / Text | Mô hình mặc định, cực kỳ đa năng, tốc độ phản hồi nhanh như chớp và thông minh vượt trội. |
-| **`kira-2.5-pro`** | Chat / Text | Dòng mô hình pro, phù hợp cho hầu hết mọi nhu cầu lập trình, xử lý văn bản phức tạp. |
-| **`kira-2.5-flash`** | Chat / Text | Dòng mô hình ổn định lâu dài, phù hợp cho hầu hết mọi nhu cầu xử lý thông tin thông thường và tạo giọng nói. |
-| **`kira-3.0-image`** | Image | Tạo hình ảnh nghệ thuật tốc độ cao, cực nhanh, tối ưu tốt cho phác thảo ý tưởng. |
-| **`kira-2.0-image`** | Image | Tạo hình ảnh nghệ thuật ổn định lâu dài, tối ưu tốt cho phác thảo ý tưởng. |
-| **`kira-3.0-video`** | Video | Dựng chuyển động video độ phân giải cao và chân thực từ mô tả văn bản (LRO). |
-| **`kira-3.0-video-flash`** | Video | Mô hình video tiên tiến, có khả năng tạo video dài 10s và chỉnh sửa video tiên tiến. |
-| **`kira-3.0-flash-tts`** | Audio / TTS | Mô hình chuyển đổi giọng đọc thế hệ mới nhất, tối ưu ngữ điệu và phát âm tiếng Việt chuẩn phòng thu. |
-| **`kira-2.0-flash-tts`** | Audio / TTS | Mô hình chuyển đổi văn bản thành giọng đọc tự nhiên (TTS), tối ưu tốc độ phản hồi. |
+| **`kira-mini-1.0`** | Chat / Text | Free, versatile AI model suitable for daily conversations. No daily token cost. |
+| **`kira-3.5-pro`** | Chat / Text | Fast response speed and deep code generation capabilities. |
+| **`kira-3.5-flash`** | Chat / Text | Extremely versatile default model with lightning-fast response speed and high intelligence. |
+| **`kira-2.5-pro`** | Chat / Text | Pro model line suitable for complex coding and text processing requirements. |
+| **`kira-2.5-flash`** | Chat / Text | Long-term stable model line suitable for general information processing and voice generation. |
+| **`kira-3.0-image`** | Image | High-speed, fast artistic image generation optimized for rapid ideation. |
+| **`kira-2.0-image`** | Image | Stable artistic image generation for visual design tasks. |
+| **`kira-3.0-video`** | Video | High-resolution realistic text-to-video motion synthesis. |
+| **`kira-3.0-video-flash`** | Video | Advanced video model capable of 10s video generation and editing. |
+| **`kira-3.0-flash-tts`** | Audio / TTS | Next-gen text-to-speech model with studio-grade natural intonation. |
+| **`kira-2.0-flash-tts`** | Audio / TTS | Natural text-to-speech conversion optimized for speed. |
 
 ---
 
-## 💻 Mẫu code tích hợp (Code Patterns)
+## 💻 Code Patterns & Examples
 
 ### 1. NodeJS / JavaScript (Fetch & EventSource)
-Chuẩn kết nối tiêu chuẩn hỗ trợ cả chế độ không Stream và Stream (Server-Sent Events) giúp hiển thị kết quả chữ chạy mượt mà theo thời gian thực.
+Standard connection supporting both non-stream and streaming (Server-Sent Events) modes for real-time token rendering.
 
 ```javascript
 /**
- * Gọi Kira AI Chat Completions API
+ * Call Kira AI Chat Completions API
  * 
- * @param {string} baseUrl     - URL máy chủ Kira AI (ví dụ: 'https://kiraai.vn')
+ * @param {string} baseUrl     - Kira AI Server URL (e.g. 'https://kiraai.vn' or 'http://127.0.0.1:4010')
  * @param {string} apiKey      - Kira AI Developer API Key
- * @param {object} params      - Các tham số: messages, model, stream, temperature, max_tokens
+ * @param {object} params      - Parameters: messages, model, stream, temperature, max_tokens
  */
 async function callKiraAIChat(baseUrl, apiKey, {
   messages,
@@ -87,7 +87,7 @@ async function callKiraAIChat(baseUrl, apiKey, {
     throw new Error(errorData.error?.message || `API Error Status: ${response.status}`);
   }
 
-  // 1. Xử lý phản hồi Stream (Server-Sent Events)
+  // 1. Handle Stream response (Server-Sent Events)
   if (stream) {
     const reader = response.body.getReader();
     const decoder = new TextDecoder('utf-8');
@@ -99,7 +99,7 @@ async function callKiraAIChat(baseUrl, apiKey, {
 
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
-      buffer = lines.pop(); // Giữ lại dòng dang dở cuối cùng trong buffer
+      buffer = lines.pop(); // Keep unfinished line in buffer
 
       for (const line of lines) {
         const trimmed = line.trim();
@@ -112,16 +112,15 @@ async function callKiraAIChat(baseUrl, apiKey, {
           const parsed = JSON.parse(dataStr);
           const chunkText = parsed.choices?.[0]?.delta?.content;
           if (chunkText) {
-            // Callback hiển thị nội dung trực tiếp ra UI (ví dụ console.log hoặc render ra màn hình)
             process.stdout.write(chunkText);
           }
         } catch (e) {
-          // Bỏ qua lỗi parse dòng SSE chưa hoàn chỉnh
+          // Ignore incomplete SSE chunk parse errors
         }
       }
     }
   } 
-  // 2. Xử lý phản hồi thường (Non-stream)
+  // 2. Handle Non-stream response
   else {
     const data = await response.json();
     return data.choices[0].message.content;
@@ -131,23 +130,22 @@ async function callKiraAIChat(baseUrl, apiKey, {
 
 ---
 
-### 2. PHP / WordPress (Sử dụng `wp_remote_post`)
-Hoàn hảo để viết các plugin WordPress tự động sinh bài viết, gợi ý tiêu đề, hoặc vẽ ảnh minh họa trực tiếp.
+### 2. PHP / WordPress (Using `wp_remote_post`)
+Perfect for WordPress plugins generating articles, headlines, or featured images.
 
 ```php
 /**
- * Gọi Kira AI Chat API trong WordPress
+ * Call Kira AI Chat API in WordPress
  *
- * @param string $prompt       Câu lệnh gửi cho AI
+ * @param string $prompt       User prompt sent to AI
  * @param string $api_key      Kira AI API Key
- * @param string $system_msg   Chỉ thị hệ thống (System Prompt)
- * @param string $base_url     Base URL của máy chủ Kira AI
- * @return string|WP_Error     Nội dung trả về hoặc lỗi WP_Error
+ * @param string $system_msg   System prompt directive
+ * @param string $base_url     Base URL of Kira AI server
+ * @return string|WP_Error     Response text or WP_Error object
  */
-function wp_call_kira_ai_chat( $prompt, $api_key, $system_msg = 'Bạn là chuyên gia SEO viết bài', $base_url = 'https://kiraai.vn' ) {
+function wp_call_kira_ai_chat( $prompt, $api_key, $system_msg = 'You are an expert SEO article writer.', $base_url = 'https://kiraai.vn' ) {
     $endpoint = rtrim( $base_url, '/' ) . '/api/v1/chat/completions';
     
-    // Xây dựng mảng hội thoại đúng chuẩn OpenAI
     $messages = [];
     if ( ! empty( $system_msg ) ) {
         $messages[] = [
@@ -173,7 +171,7 @@ function wp_call_kira_ai_chat( $prompt, $api_key, $system_msg = 'Bạn là chuy�
             'Authorization' => 'Bearer ' . $api_key
         ],
         'body'    => wp_json_encode( $payload ),
-        'timeout' => 90 // Đề xuất timeout cao để hỗ trợ sinh bài viết dài
+        'timeout' => 90
     ] );
 
     if ( is_wp_error( $response ) ) {
@@ -184,7 +182,7 @@ function wp_call_kira_ai_chat( $prompt, $api_key, $system_msg = 'Bạn là chuy�
     $data = json_decode( $body, true );
 
     if ( isset( $data['error'] ) ) {
-        return new WP_Error( 'kira_ai_error', $data['error']['message'] ?? 'Lỗi không xác định từ Kira AI.' );
+        return new WP_Error( 'kira_ai_error', $data['error']['message'] ?? 'Unknown error from Kira AI.' );
     }
 
     return $data['choices'][0]['message']['content'] ?? '';
@@ -193,8 +191,8 @@ function wp_call_kira_ai_chat( $prompt, $api_key, $system_msg = 'Bạn là chuy�
 
 ---
 
-### 3. Python (Requests & Sinh ảnh / Video minh họa)
-Thích hợp cho các Script tự động hóa, xử lý dữ liệu hàng loạt hoặc AI agent.
+### 3. Python (Requests & Image / Video Generation)
+Ideal for automation scripts, batch processing, and AI agents.
 
 ```python
 import requests
@@ -211,8 +209,8 @@ class KiraAIClient:
 
     def generate_image(self, prompt, aspect_ratio="16:9", model="kira-3.0-image"):
         """
-        Sinh ảnh từ văn bản bằng Imagen thông qua Kira AI.
-        Trả về ảnh định dạng Base64 và thông tin MimeType.
+        Generate image from prompt via Kira AI.
+        Returns Base64 image data and MimeType.
         """
         url = f"{self.base_url}/api/v1/images/generations"
         payload = {
@@ -225,16 +223,13 @@ class KiraAIClient:
         response.raise_for_status()
         data = response.json()
         
-        # Lấy hình ảnh đầu tiên trong mảng dữ liệu trả về
         image_info = data.get("data", [])[0]
         return image_info["b64_json"], image_info["mime_type"]
 
     def generate_video_sync(self, prompt, aspect_ratio="16:9", duration_seconds=6, model="kira-3.0-video"):
         """
-        Sinh video ngắn từ văn bản. Do sinh video là tác vụ chạy ngầm (async),
-        hàm này sẽ tự động gọi API kiểm tra trạng thái (polling) cho tới khi hoàn tất.
+        Generate text-to-video. Video generation is async, so this function polls until completion.
         """
-        # 1. Khởi tạo tác vụ sinh video
         init_url = f"{self.base_url}/api/v1/videos/generations"
         payload = {
             "prompt": prompt,
@@ -248,34 +243,33 @@ class KiraAIClient:
         operation = res.json()
         
         op_id = operation["id"]
-        status = operation["status"]
+        print(f"Video generation task started. Operation ID: {op_id}. Processing...")
         
-        print(f"Bắt đầu khởi tạo Video. ID tiến trình: {op_id}. Đang xử lý...")
-        
-        # 2. Polling kiểm tra trạng thái
         status_url = f"{self.base_url}/api/v1/videos/operations/{op_id}"
         while True:
-            time.sleep(10) # Chờ 10 giây mỗi lượt check
+            time.sleep(10)
             check_res = requests.get(status_url, headers=self.headers, timeout=20)
             check_res.raise_for_status()
             status_data = check_res.json()
             
             if status_data.get("status") == "completed":
-                print("Video đã sinh thành công!")
+                print("Video generated successfully!")
                 video_info = status_data.get("data", [])[0]
                 return video_info["b64_json"], video_info["mime_type"]
             elif status_data.get("status") == "failed":
-                raise Exception(f"Sinh video thất bại: {status_data.get('error')}")
+                raise Exception(f"Video generation failed: {status_data.get('error')}")
             else:
-                print("Đang xử lý video...")
+                print("Processing video...")
 ```
 
-### 4. Gửi yêu cầu Multimodal (Phân tích hình ảnh)
+---
 
-Các model sinh text như `kira-3.5-flash` hỗ trợ xử lý hình ảnh (Multimodal). Bạn có thể gửi yêu cầu phân tích ảnh theo một trong hai định dạng sau:
+### 4. Multimodal Requests (Image Analysis)
 
-#### Cách 1: Chuẩn OpenAI Multimodal (Khuyên dùng)
-Truyền `content` dưới dạng mảng các phần tử text và `image_url` chứa chuỗi Base64 dưới dạng Data URI:
+Text generation models like `kira-3.5-flash` support image analysis (Multimodal). You can send image analysis requests using either format below:
+
+#### Option 1: OpenAI Multimodal Standard (Recommended)
+Pass `content` as an array of text and `image_url` containing Base64 Data URIs:
 
 ```javascript
 const response = await fetch('https://kiraai.vn/api/v1/chat/completions', {
@@ -292,12 +286,12 @@ const response = await fetch('https://kiraai.vn/api/v1/chat/completions', {
         content: [
           {
             type: 'text',
-            text: 'Hãy mô tả chi tiết bức ảnh này.'
+            text: 'Please describe this image in detail.'
           },
           {
             type: 'image_url',
             image_url: {
-              url: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQE...' // Data URI base64 của ảnh
+              url: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQE...'
             }
           }
         ]
@@ -309,8 +303,8 @@ const data = await response.json();
 console.log(data.choices[0].message.content);
 ```
 
-#### Cách 2: Chuẩn Gemini-native (Dạng parts)
-Kira AI cũng hỗ trợ cấu trúc `parts` và `inlineData` gốc của Gemini trực tiếp trong mảng `messages`:
+#### Option 2: Gemini-native Parts
+Kira AI also supports Gemini native `parts` and `inlineData` directly inside `messages`:
 
 ```json
 {
@@ -320,7 +314,7 @@ Kira AI cũng hỗ trợ cấu trúc `parts` và `inlineData` gốc của Gemini
       "role": "user",
       "parts": [
         {
-          "text": "Hãy mô tả hình ảnh này..."
+          "text": "Please describe this image..."
         },
         {
           "inlineData": {
@@ -336,14 +330,14 @@ Kira AI cũng hỗ trợ cấu trúc `parts` và `inlineData` gốc của Gemini
 
 ---
 
-### 5. Hướng dẫn sử dụng Text to Speech API (TTS)
+### 5. Text to Speech API (TTS)
 
-API Text-to-Speech của Kira AI tương thích hoàn toàn với chuẩn OpenAI tại endpoint `/api/v1/audio/speech`.
+Kira AI Text-to-Speech API is fully OpenAI-compatible at endpoint `/api/v1/audio/speech`.
 
-#### Tham số chính:
-- **Model**: `kira-3.0-flash-tts` hoặc `kira-2.0-flash-tts`
+#### Parameters:
+- **Model**: `kira-3.0-flash-tts` or `kira-2.0-flash-tts`
 - **Voice**: `alloy` (Kore), `echo` (Fenrir), `fable` (Puck), `onyx` (Charon), `nova` (Aoede)
-- **Input**: Đoạn văn bản cần chuyển đổi thành âm thanh.
+- **Input**: The text string to synthesize into speech.
 
 #### NodeJS / JavaScript Example:
 ```javascript
@@ -358,7 +352,7 @@ const openai = new OpenAI({
 const mp3 = await openai.audio.speech.create({
   model: "kira-3.0-flash-tts",
   voice: "alloy",
-  input: "Chào mừng bạn đến với hệ sinh thái trí tuệ nhân tạo Kira AI."
+  input: "Welcome to the Kira AI ecosystem."
 });
 
 const buffer = Buffer.from(await mp3.arrayBuffer());
@@ -376,7 +370,7 @@ headers = {
 }
 payload = {
     "model": "kira-3.0-flash-tts",
-    "input": "Chào mừng bạn đến với hệ sinh thái trí tuệ nhân tạo Kira AI.",
+    "input": "Welcome to the Kira AI ecosystem.",
     "voice": "alloy"
 }
 
@@ -384,15 +378,16 @@ response = requests.post(url, json=payload, headers=headers)
 with open("output.mp3", "wb") as f:
     f.write(response.content)
 ```
+
 ---
 
-### 6. Lấy Danh sách mô hình (Models List API)
+### 6. Models List API
 
-API này cho phép lập trình viên truy vấn danh sách toàn bộ các mô hình đang hoạt động trên hệ thống Kira AI, bao gồm thông tin về loại mô hình, trạng thái, tính năng và giá cả.
+Query active models, capabilities, and pricing information on the Kira AI network.
 
 * **Endpoint:** `GET /api/v1/models`
-* **Xác thực:** Không bắt buộc (API công khai) hoặc truyền Header `Authorization: Bearer YOUR_KIRA_API_KEY`
-* **Phản hồi mẫu:**
+* **Auth:** Optional / `Authorization: Bearer YOUR_KIRA_API_KEY`
+* **Response Example:**
   ```json
   {
     "object": "list",
@@ -404,15 +399,9 @@ API này cho phép lập trình viên truy vấn danh sách toàn bộ các mô 
         "owned_by": "kira-ai",
         "type": "chat",
         "is_free": false,
-        "is_partner": true,
         "name": "Kira 3.5 Pro",
-        "description": "Model nhanh nhất, tối ưu SEO vượt trội.",
-        "tags": ["PRO", "VIP"],
-        "status": "active",
-        "price_input_vnd": 20000,
-        "price_output_vnd": 150000,
-        "icon_url": "https://kiraai.vn/images/logo.png",
-        "usage_count": 45
+        "description": "Fastest model with superior SEO generation.",
+        "status": "active"
       }
     ]
   }
@@ -420,13 +409,13 @@ API này cho phép lập trình viên truy vấn danh sách toàn bộ các mô 
 
 ---
 
-### 7. Lấy danh sách giọng đọc của Model TTS (Voices List API)
+### 7. TTS Voices List API
 
-API này cung cấp danh sách toàn bộ các giọng đọc được hỗ trợ trên hệ thống, bao gồm giới tính, ngôn ngữ và ánh xạ tương ứng của chúng.
+Query available voice options, gender, and language mapping for Text-to-Speech models.
 
 * **Endpoint:** `GET /api/v1/audio/voices`
-* **Xác thực:** Không bắt buộc (API công khai)
-* **Phản hồi mẫu:**
+* **Auth:** Optional (Public endpoint)
+* **Response Example:**
   ```json
   {
     "object": "list",
@@ -435,17 +424,17 @@ API này cung cấp danh sách toàn bộ các giọng đọc được hỗ tr�
         "id": "alloy",
         "name": "Alloy",
         "mapped_to": "Kore",
-        "gender": "Nữ (Female)",
-        "description": "Giọng nữ miền Bắc tự nhiên, nhẹ nhàng, tốc độ vừa phải.",
-        "language": "vi-VN"
+        "gender": "Female",
+        "description": "Natural, clear female voice.",
+        "language": "en-US / vi-VN"
       },
       {
         "id": "echo",
         "name": "Echo",
         "mapped_to": "Fenrir",
-        "gender": "Nam (Male)",
-        "description": "Giọng nam miền Bắc trầm ấm, rõ ràng, truyền cảm.",
-        "language": "vi-VN"
+        "gender": "Male",
+        "description": "Warm, deep male voice.",
+        "language": "en-US / vi-VN"
       }
     ]
   }
@@ -453,17 +442,16 @@ API này cung cấp danh sách toàn bộ các giọng đọc được hỗ tr�
 
 ---
 
-## 🔒 Bảo mật & Quy tắc Vàng (Golden Rules)
+## 🔒 Golden Rules for Developers
 
-1. **🔒 Tuyệt đối không để lộ API Key ở Client-side:**
-   Không bao giờ lưu API Key hoặc thực hiện gọi trực tiếp từ giao diện Web phía Client (React, Vue, HTML/JS thuần) không có lớp bảo vệ. Luôn định tuyến các yêu cầu thông qua Backend trung gian (Proxy/Controller) để bảo mật API Key.
-   
-2. **⚡ Sử dụng Chế độ Stream cho các văn bản dài:**
-   Model `kira-3.5-flash` hỗ trợ tính năng tự động liên kết tiếp nối cực kỳ mạnh mẽ (Auto-Continuation) giúp tự động sinh các bài viết siêu dài vượt mức giới hạn token của API đơn lẻ. Sử dụng `stream: true` kết hợp EventSource để mang lại trải nghiệm thời gian thực tuyệt vời cho người dùng.
+1. **🔒 Never Expose API Keys on Client-side:**
+   Never store API Keys or make direct requests from front-end applications (React, Vue, plain HTML/JS). Always route requests through a backend server or local proxy (KiraAI Route).
 
-3. **🖼️ Xử lý định dạng Base64 thông minh:**
-   API sinh ảnh và video của Kira AI trả về dữ liệu hình ảnh trực tiếp dưới dạng chuỗi Base64 (`b64_json`). Khi lưu vào cơ sở dữ liệu hoặc CMS (như WordPress), hãy chuyển đổi chuỗi Base64 này thành file vật lý trước để tối ưu hóa hiệu năng tải trang:
-   - *Trong PHP/WordPress*: Giải mã chuỗi bằng `base64_decode`, ghi vào thư mục uploads bằng `file_put_contents`, rồi đăng ký vào thư viện bằng `wp_insert_attachment`.
+2. **⚡ Use Streaming for Long Responses:**
+   Enable `stream: true` to receive realtime token streams for long code generation and article writing.
 
-4. **⌛ Cấu hình Timeout phù hợp:**
-   Vì các tác vụ AI đặc biệt như phân tích nội dung chuyên sâu hoặc tạo ảnh chất lượng cao cần thời gian xử lý lớn, hãy đảm bảo đặt tham số kết nối timeout tối thiểu **60 giây** đến **90 giây** đối với các HTTP Client của bạn.
+3. **🖼️ Base64 Image Processing:**
+   Image generation returns Base64 data (`b64_json`). Convert Base64 strings to binary image files when storing in databases or CMS upload folders (like WordPress `wp_insert_attachment`).
+
+4. **⌛ Configure Proper HTTP Timeout:**
+   Set HTTP client timeouts to at least **60s to 90s** for image, video, or deep code generation tasks.

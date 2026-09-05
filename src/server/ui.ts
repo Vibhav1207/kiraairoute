@@ -490,18 +490,101 @@ select:focus {
   background: #0d1117;
   border: 1px solid #30363d;
   border-radius: 8px;
-  max-height: 380px;
+  max-height: 420px;
   overflow-y: auto;
-  padding: 16px;
-  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-  font-size: 12px;
+  padding: 20px;
+  font-size: 13px;
   color: #c9d1d9;
   line-height: 1.6;
 }
-.skill-preview-box pre {
-  margin: 0;
-  white-space: pre-wrap;
-  word-break: break-word;
+
+.rendered-markdown {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.rendered-markdown h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f0f6fc;
+  border-bottom: 1px solid #30363d;
+  padding-bottom: 8px;
+  margin-top: 16px;
+  margin-bottom: 12px;
+}
+.rendered-markdown h2 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #f0f6fc;
+  border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+  padding-bottom: 4px;
+  margin-top: 18px;
+  margin-bottom: 10px;
+}
+.rendered-markdown h3 {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #58a6ff;
+  margin-top: 14px;
+  margin-bottom: 8px;
+}
+.rendered-markdown p {
+  margin-bottom: 10px;
+  color: #c9d1d9;
+}
+.rendered-markdown ul, .rendered-markdown ol {
+  padding-left: 20px;
+  margin-bottom: 12px;
+}
+.rendered-markdown li {
+  margin-bottom: 4px;
+}
+.rendered-markdown hr {
+  border: 0;
+  border-top: 1px solid #30363d;
+  margin: 16px 0;
+}
+.rendered-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 12px;
+}
+.rendered-markdown th, .rendered-markdown td {
+  border: 1px solid #30363d;
+  padding: 8px 10px;
+  text-align: left;
+}
+.rendered-markdown th {
+  background: #161b22;
+  color: #f0f6fc;
+  font-weight: 600;
+}
+.rendered-markdown tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+.rendered-markdown code.inline-code {
+  background: rgba(110, 118, 129, 0.2);
+  color: #ff7b72;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 11.5px;
+}
+.rendered-markdown pre {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 12px;
+  overflow-x: auto;
+  font-family: monospace;
+  font-size: 11.5px;
+  color: #e6edf3;
+  margin: 12px 0;
+  line-height: 1.5;
+}
+.rendered-markdown pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
 }
 </style>
 </head>
@@ -654,9 +737,7 @@ select:focus {
       </button>
     </div>
 
-    <div id="skillPreviewContainer" class="skill-preview-box" style="display: none;">
-      <pre><code id="skillPreviewCode">Click 'View Skill Context' to load SKILL.md preview...</code></pre>
-    </div>
+    <div id="skillPreviewContainer" class="skill-preview-box rendered-markdown" style="display: none;"></div>
   </div>
 </main>
 
@@ -670,6 +751,59 @@ const toggleApiKeyBtn = document.getElementById("toggleApiKey");
 const eyeIcon = document.getElementById("eyeIcon");
 
 let models = [];
+
+function parseMarkdown(md) {
+  if (!md) return "";
+  var codeBlocks = [];
+  var html = md.replace(new RegExp("\\x60\\x60\\x60(\\w*)\\n([\\s\\S]*?)\\x60\\x60\\x60", "g"), function(match, lang, code) {
+    var placeholder = "___CODE_BLOCK_" + codeBlocks.length + "___";
+    var escapedCode = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    codeBlocks.push('<pre><code class="language-' + lang + '">' + escapedCode + '</code></pre>');
+    return placeholder;
+  });
+
+  html = html.replace(new RegExp("\\x60([^\\x60]+)\\x60", "g"), function(match, code) {
+    var escaped = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return '<code class="inline-code">' + escaped + '</code>';
+  });
+
+  html = html.replace(new RegExp("^### (.*$)", "gm"), '<h3>$1</h3>');
+  html = html.replace(new RegExp("^## (.*$)", "gm"), '<h2>$1</h2>');
+  html = html.replace(new RegExp("^# (.*$)", "gm"), '<h1>$1</h1>');
+  html = html.replace(new RegExp("^---$", "gm"), '<hr>');
+
+  html = html.replace(new RegExp("(\\|[^\\n]+\\|\\n\\|[-:\\s|]+\\|\\n(?:\\|[^\\n]+\\|\\n?)+)", "g"), function(match) {
+    var lines = match.trim().split('\n');
+    if (lines.length < 3) return match;
+    var headerRow = lines[0].split('|').slice(1, -1).map(function(c) { return '<th>' + c.trim() + '</th>'; }).join('');
+    var bodyRows = lines.slice(2).map(function(row) {
+      var cols = row.split('|').slice(1, -1).map(function(c) { return '<td>' + c.trim() + '</td>'; }).join('');
+      return '<tr>' + cols + '</tr>';
+    }).join('');
+    return '<table><thead><tr>' + headerRow + '</tr></thead><tbody>' + bodyRows + '</tbody></table>';
+  });
+
+  html = html.replace(new RegExp("\\*\\*([^*]+)\\*\\*", "g"), '<strong>$1</strong>');
+  html = html.replace(new RegExp("\\*([^*]+)\\*", "g"), '<em>$1</em>');
+  html = html.replace(new RegExp("\\[([^\\]]+)\\]\\(([^)]+)\\)", "g"), '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+  html = html.replace(new RegExp("^\\s*[-*]\\s+(.*$)", "gm"), '<li>$1</li>');
+  html = html.replace(new RegExp("(<li>.*<\\/li>)", "gs"), '<ul>$1</ul>');
+  html = html.replace(new RegExp("<\\/ul>\\s*<ul>", "g"), '');
+
+  codeBlocks.forEach(function(block, i) {
+    html = html.replace("___CODE_BLOCK_" + i + "___", block);
+  });
+
+  return html.split('\n\n').map(function(p) {
+    p = p.trim();
+    if (!p) return '';
+    if (p.indexOf('<h') === 0 || p.indexOf('<pre') === 0 || p.indexOf('<table') === 0 || p.indexOf('<ul') === 0 || p.indexOf('<hr') === 0) {
+      return p;
+    }
+    return '<p>' + p + '</p>';
+  }).join('');
+}
 
 async function copySkillContent() {
   showStatus("Fetching SKILL.md...", "info");
@@ -690,21 +824,24 @@ async function copySkillContent() {
 let skillLoaded = false;
 async function toggleSkillPreview() {
   const container = document.getElementById("skillPreviewContainer");
-  const codeEl = document.getElementById("skillPreviewCode");
   const btnText = document.getElementById("skillPreviewToggleText");
 
   if (container.style.display === "none" || !container.style.display) {
     container.style.display = "block";
     btnText.textContent = "Hide Skill Context";
     if (!skillLoaded) {
-      codeEl.textContent = "Loading SKILL.md...";
+      container.innerHTML = "<p>Loading SKILL.md...</p>";
       try {
         const res = await fetch("/api/skill");
         const data = await res.json();
-        codeEl.textContent = data.content || "SKILL.md is empty.";
-        skillLoaded = true;
+        if (data.content) {
+          container.innerHTML = parseMarkdown(data.content);
+          skillLoaded = true;
+        } else {
+          container.innerHTML = "<p>SKILL.md is empty.</p>";
+        }
       } catch {
-        codeEl.textContent = "Failed to load SKILL.md content.";
+        container.innerHTML = "<p>Failed to load SKILL.md content.</p>";
       }
     }
   } else {
