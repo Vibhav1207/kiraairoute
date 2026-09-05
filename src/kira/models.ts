@@ -1,3 +1,5 @@
+import { KIRA_BASE_URL } from "../config/constants.js";
+
 export interface ModelDefinition {
   id: string;
   name: string;
@@ -110,10 +112,99 @@ export const KIRA_MODELS: readonly ModelDefinition[] = [
   }
 ] as const;
 
+let dynamicModelsCache: ModelDefinition[] | null = null;
+let lastCacheTime = 0;
+const CACHE_TTL_MS = 60000;
+
+export async function fetchUpstreamModels(apiKey?: string): Promise<ModelDefinition[]> {
+  const now = Date.now();
+  if (dynamicModelsCache && (now - lastCacheTime < CACHE_TTL_MS)) {
+    return dynamicModelsCache;
+  }
+
+  try {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (apiKey) {
+      headers["Authorization"] = `Bearer ${apiKey}`;
+    }
+
+    const res = await fetch(`${KIRA_BASE_URL}/models`, {
+      method: "GET",
+      headers,
+      signal: AbortSignal.timeout(5000)
+    });
+
+    if (res.ok) {
+      const data: any = await res.json();
+      const rawList = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+      
+      if (rawList.length > 0) {
+        const fetchedModels: ModelDefinition[] = rawList.map((m: any) => {
+          const id = String(m.id || m.name || "");
+          const name = String(m.name || m.id || "Kira Model");
+          
+          let provider = String(m.owned_by || m.provider || "");
+          if (!provider) {
+            const lowerId = id.toLowerCase();
+            if (lowerId.includes("kira")) provider = "Kira";
+            else if (lowerId.includes("mimo") || lowerId.includes("xiaomi")) provider = "Xiaomi";
+            else if (lowerId.includes("deepseek")) provider = "DeepSeek";
+            else if (lowerId.includes("qwen")) provider = "Qwen";
+            else if (lowerId.includes("glm")) provider = "GLM";
+            else if (lowerId.includes("gpt")) provider = "OpenAI";
+            else if (lowerId.includes("hy3") || lowerId.includes("tencent")) provider = "Tencent";
+            else provider = "Kira AI";
+          }
+
+          const isFree = m.is_free !== undefined ? Boolean(m.is_free) : !id.includes("balance");
+          const balanceRequired = m.balance_required !== undefined
+            ? Boolean(m.balance_required)
+            : (m.price_input_vnd ? m.price_input_vnd > 0 : !isFree);
+
+          return {
+            id,
+            name,
+            provider,
+            free: true,
+            balance_required: balanceRequired,
+            daily_limit: m.daily_limit || (balanceRequired ? "250M tokens/day" : "150M tokens/day"),
+            context_window: m.context_window || 128_000
+          };
+        });
+
+        // Merge static defaults if any missing
+        const knownIds = new Set(fetchedModels.map(m => m.id));
+        for (const staticModel of KIRA_MODELS) {
+          if (!knownIds.has(staticModel.id)) {
+            fetchedModels.push(staticModel);
+          }
+        }
+
+        dynamicModelsCache = fetchedModels;
+        lastCacheTime = now;
+        return fetchedModels;
+      }
+    }
+  } catch {
+    // Ignore fetch error, use fallback
+  }
+
+  return [...KIRA_MODELS];
+}
+
 export function getModels(): readonly ModelDefinition[] {
-  return KIRA_MODELS;
+  return dynamicModelsCache || KIRA_MODELS;
 }
 
 export function getModel(modelId: string): ModelDefinition | undefined {
-  return KIRA_MODELS.find((model) => model.id === modelId);
+  const models = getModels();
+  return models.find((model) => model.id === modelId) || {
+    id: modelId,
+    name: modelId,
+    provider: "Kira AI",
+    free: true,
+    balance_required: true,
+    daily_limit: "250M tokens/day",
+    context_window: 128_000
+  };
 }

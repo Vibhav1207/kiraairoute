@@ -6,7 +6,7 @@ import { autoConfigureAll } from "../cli/codex.js";
 import { getKiraApiKey, getKiraModel, hasKiraApiKey, setKiraApiKey, setKiraModel } from "../cli/config.js";
 import { DEFAULT_PORT } from "../config/constants.js";
 import { kiraChat, kiraStream, testKiraConnection, translateErrorMessage } from "../kira/client.js";
-import { getModel, getModels } from "../kira/models.js";
+import { fetchUpstreamModels, getModel, getModels } from "../kira/models.js";
 import { makeResponsesObject, ResponsesRequest, responsesToChat } from "../protocols/responses.js";
 import { getMetrics, recordRequest } from "./metrics.js";
 import { getWebPageHtml } from "./ui.js";
@@ -107,7 +107,9 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.get("/api/models", async () => {
-    return { object: "list", data: getModels() };
+    const apiKey = hasKiraApiKey() ? getKiraApiKey() : undefined;
+    const modelsList = await fetchUpstreamModels(apiKey);
+    return { object: "list", data: modelsList };
   });
 
   app.get("/api/status", async () => {
@@ -292,11 +294,14 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
 
   // OpenAI Compatible Endpoints
   app.get("/v1/models", async () => {
+    const apiKey = hasKiraApiKey() ? getKiraApiKey() : undefined;
+    const modelsList = await fetchUpstreamModels(apiKey);
     return {
       object: "list",
-      data: getModels().map(model => ({
+      data: modelsList.map(model => ({
         id: model.id,
         object: "model",
+        created: 1700000000,
         owned_by: model.provider.toLowerCase()
       }))
     };
