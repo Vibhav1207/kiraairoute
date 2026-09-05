@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { autoConfigureAll } from "../cli/codex.js";
 import { getKiraApiKey, getKiraModel, hasKiraApiKey, setKiraApiKey, setKiraModel } from "../cli/config.js";
 import { DEFAULT_PORT } from "../config/constants.js";
@@ -9,6 +10,23 @@ import { getModel, getModels } from "../kira/models.js";
 import { makeResponsesObject, ResponsesRequest, responsesToChat } from "../protocols/responses.js";
 import { getMetrics, recordRequest } from "./metrics.js";
 import { getWebPageHtml } from "./ui.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+async function locateSkillFile(): Promise<string | null> {
+  const possiblePaths = [
+    path.join(process.cwd(), "SKILL.md"),
+    path.join(__dirname, "..", "..", "SKILL.md"),
+    path.join(__dirname, "..", "SKILL.md")
+  ];
+  for (const p of possiblePaths) {
+    try {
+      const stat = await fs.stat(p);
+      if (stat.isFile()) return p;
+    } catch {}
+  }
+  return null;
+}
 
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
   // Web UI and status endpoints
@@ -43,6 +61,48 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       return reply.type("image/webp").send(buffer);
     } catch {
       return reply.code(404).send({ error: "Codex logo file not found." });
+    }
+  });
+
+  app.get("/api/skill", async (_request, reply) => {
+    const skillPath = await locateSkillFile();
+    if (!skillPath) {
+      return reply.code(404).send({ error: { message: "SKILL.md file not found." } });
+    }
+    try {
+      const content = await fs.readFile(skillPath, "utf-8");
+      return { success: true, content };
+    } catch {
+      return reply.code(500).send({ error: { message: "Failed to read SKILL.md file." } });
+    }
+  });
+
+  app.get("/api/skill/download", async (_request, reply) => {
+    const skillPath = await locateSkillFile();
+    if (!skillPath) {
+      return reply.code(404).send({ error: "SKILL.md file not found." });
+    }
+    try {
+      const buffer = await fs.readFile(skillPath);
+      return reply
+        .header("Content-Disposition", 'attachment; filename="SKILL.md"')
+        .type("text/markdown")
+        .send(buffer);
+    } catch {
+      return reply.code(500).send({ error: "Failed to download SKILL.md file." });
+    }
+  });
+
+  app.get("/SKILL.md", async (_request, reply) => {
+    const skillPath = await locateSkillFile();
+    if (!skillPath) {
+      return reply.code(404).send({ error: "SKILL.md file not found." });
+    }
+    try {
+      const content = await fs.readFile(skillPath, "utf-8");
+      return reply.type("text/markdown").send(content);
+    } catch {
+      return reply.code(500).send({ error: "Failed to read SKILL.md file." });
     }
   });
 

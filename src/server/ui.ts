@@ -450,6 +450,59 @@ select:focus {
   object-fit: contain;
   vertical-align: middle;
 }
+
+.skill-card {
+  margin-top: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+}
+.skill-header {
+  margin-bottom: 12px;
+}
+.skill-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.skill-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-heading);
+}
+.skill-description {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+.skill-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+.skill-preview-box {
+  margin-top: 16px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 16px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+  color: #c9d1d9;
+  line-height: 1.6;
+}
+.skill-preview-box pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
 </style>
 </head>
 <body>
@@ -460,7 +513,7 @@ select:focus {
     <img src="/logo.png" alt="KiraAI Route Logo" class="brand-logo-img" onerror="this.style.display='none'">
     <div class="brand-text-group">
       <span class="brand-title">KiraAI Route</span>
-      <span class="version-pill">v0.3.3</span>
+      <span class="version-pill">v0.3.5</span>
     </div>
   </div>
   <div class="nav-status">
@@ -575,6 +628,36 @@ select:focus {
       </div>
     </div>
   </div>
+
+  <!-- AI Assistant Integration Skill Section -->
+  <div class="skill-card">
+    <div class="skill-header">
+      <div class="skill-title-group">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        <span class="skill-title">AI Assistant Integration Skill (SKILL.md)</span>
+        <span class="badge-tag tag-free">Preconfigured Context</span>
+      </div>
+      <p class="skill-description">
+        Provide preconfigured context for your AI coding assistants (<strong>Cursor, Codex, Cline, Roo Code, Claude Code, Antigravity</strong>) to accurately understand Kira AI API structures, supported models, and generate precise integration code for NodeJS, PHP, Python, and WordPress.
+      </p>
+    </div>
+
+    <div class="skill-actions-row">
+      <button class="btn-secondary" style="width: auto; padding: 0 16px;" onclick="copySkillContent()">
+        <span>📋 Copy SKILL.md</span>
+      </button>
+      <a href="/api/skill/download" download="SKILL.md" class="btn-secondary" style="width: auto; padding: 0 16px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+        <span>📥 Download SKILL.md</span>
+      </a>
+      <button class="btn-secondary" style="width: auto; padding: 0 16px;" onclick="toggleSkillPreview()">
+        <span>👁️ <span id="skillPreviewToggleText">View Skill Context</span></span>
+      </button>
+    </div>
+
+    <div id="skillPreviewContainer" class="skill-preview-box" style="display: none;">
+      <pre><code id="skillPreviewCode">Click 'View Skill Context' to load SKILL.md preview...</code></pre>
+    </div>
+  </div>
 </main>
 
 <script>
@@ -587,6 +670,48 @@ const toggleApiKeyBtn = document.getElementById("toggleApiKey");
 const eyeIcon = document.getElementById("eyeIcon");
 
 let models = [];
+
+async function copySkillContent() {
+  showStatus("Fetching SKILL.md...", "info");
+  try {
+    const res = await fetch("/api/skill");
+    const data = await res.json();
+    if (data.content) {
+      await navigator.clipboard.writeText(data.content);
+      showStatus("✓ SKILL.md copied to clipboard! Paste into your project rules or AI context.", "success");
+    } else {
+      showStatus(data?.error?.message || "SKILL.md file not found.", "error");
+    }
+  } catch {
+    showStatus("Could not fetch SKILL.md.", "error");
+  }
+}
+
+let skillLoaded = false;
+async function toggleSkillPreview() {
+  const container = document.getElementById("skillPreviewContainer");
+  const codeEl = document.getElementById("skillPreviewCode");
+  const btnText = document.getElementById("skillPreviewToggleText");
+
+  if (container.style.display === "none" || !container.style.display) {
+    container.style.display = "block";
+    btnText.textContent = "Hide Skill Context";
+    if (!skillLoaded) {
+      codeEl.textContent = "Loading SKILL.md...";
+      try {
+        const res = await fetch("/api/skill");
+        const data = await res.json();
+        codeEl.textContent = data.content || "SKILL.md is empty.";
+        skillLoaded = true;
+      } catch {
+        codeEl.textContent = "Failed to load SKILL.md content.";
+      }
+    }
+  } else {
+    container.style.display = "none";
+    btnText.textContent = "View Skill Context";
+  }
+}
 
 toggleApiKeyBtn.addEventListener("click", () => {
   const isPassword = apiKeyInput.type === "password";
