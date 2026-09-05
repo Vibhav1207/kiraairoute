@@ -38,7 +38,7 @@ let currentApiKey = process.env.KIRA_API_KEY || loadedConfig.apiKey || "";
 let currentModel = process.env.KIRA_MODEL || loadedConfig.model || DEFAULT_MODEL;
 
 export function getKiraApiKey(): string {
-  const apiKey = process.env.KIRA_API_KEY || currentApiKey;
+  const apiKey = currentApiKey || process.env.KIRA_API_KEY;
   if (!apiKey) {
     throw new Error("KIRA_API_KEY is not set.");
   }
@@ -47,12 +47,13 @@ export function getKiraApiKey(): string {
 
 export function setKiraApiKey(apiKey: string): void {
   currentApiKey = apiKey.trim();
+  process.env.KIRA_API_KEY = currentApiKey;
   loadedConfig.apiKey = currentApiKey;
   writeConfigFile(loadedConfig);
 }
 
 export function hasKiraApiKey(): boolean {
-  const apiKey = process.env.KIRA_API_KEY || currentApiKey;
+  const apiKey = currentApiKey || process.env.KIRA_API_KEY;
   return Boolean(apiKey);
 }
 

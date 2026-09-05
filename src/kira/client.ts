@@ -25,7 +25,7 @@ export function translateErrorMessage(message: string): string {
     return "The model is currently receiving high traffic. Please try again in a few seconds or switch to Mimo V2.5.";
   }
   if (lower.includes("số dư") || lower.includes("không đủ") || lower.includes("balance")) {
-    return "Insufficient account balance. Please select a free model (e.g. Mimo V2.5 or Kira Mini 1.0) or check your account at kiraai.vn/developer.";
+    return "Insufficient account balance reported by kiraai.vn for this API key. If you recently topped up at kiraai.vn/developer, please verify that your API key matches the top-up account or wait a moment for upstream balance sync.";
   }
   if (lower.includes("không thể truy cập") || lower.includes("unreachable")) {
     return "The selected model is currently unreachable. Please select another model like Mimo V2.5.";
@@ -110,6 +110,8 @@ export async function kiraStream(body: unknown, timeoutMs = 120000): Promise<Res
 export async function testKiraConnection(modelOverride?: string): Promise<{ status: number; data: unknown }> {
   try {
     const model = modelOverride || getKiraModel();
+    
+    // First attempt: Fast streaming probe
     const res = await kiraStream({
       model,
       messages: [{ role: "user", content: "hi" }],
@@ -117,27 +119,27 @@ export async function testKiraConnection(modelOverride?: string): Promise<{ stat
       stream: true
     }, 10000);
 
-    if (res.status >= 400 || !res.ok) {
-      const text = await res.text();
-      let errObj: any;
-      try {
-        errObj = JSON.parse(text);
-        if (errObj?.error?.message && typeof errObj.error.message === "string") {
-          errObj.error.message = translateErrorMessage(errObj.error.message);
-        }
-      } catch {
-        errObj = { error: { message: translateErrorMessage(text) } };
+    if (res.ok && res.status < 400) {
+      if (res.body) {
+        const reader = res.body.getReader();
+        reader.cancel().catch(() => {});
       }
-      return { status: res.status, data: errObj };
+      return { status: 200, data: { success: true } };
     }
 
-    // Cancel stream immediately so we don't wait for LLM completion
-    if (res.body) {
-      const reader = res.body.getReader();
-      reader.cancel().catch(() => {});
+    // Second attempt: Fallback non-streaming probe if streaming test returned error/non-200
+    const chatRes = await kiraChat({
+      model,
+      messages: [{ role: "user", content: "hi" }],
+      max_tokens: 1,
+      stream: false
+    }, 1, 10000);
+
+    if (chatRes.status < 400) {
+      return { status: 200, data: { success: true } };
     }
 
-    return { status: 200, data: { success: true } };
+    return chatRes;
   } catch (err) {
     return {
       status: 502,
