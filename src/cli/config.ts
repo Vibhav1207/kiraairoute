@@ -12,7 +12,11 @@ function readConfigFile(): ConfigData {
   try {
     if (existsSync(CONFIG_FILE)) {
       const content = readFileSync(CONFIG_FILE, "utf-8");
-      return JSON.parse(content);
+      const parsed = JSON.parse(content);
+      if (parsed && parsed.model === "deepseek-v4-flash-free") {
+        parsed.model = DEFAULT_MODEL;
+      }
+      return parsed;
     }
   } catch {
     // Ignore read or parse errors
@@ -31,11 +35,21 @@ function writeConfigFile(config: ConfigData): void {
   }
 }
 
+// Sanitize legacy environment variable if set to deepseek-v4-flash-free
+if (process.env.KIRA_MODEL === "deepseek-v4-flash-free") {
+  process.env.KIRA_MODEL = DEFAULT_MODEL;
+}
+
 // Initialize config on load
 loadedConfig = readConfigFile();
+if (loadedConfig.model === "deepseek-v4-flash-free") {
+  loadedConfig.model = DEFAULT_MODEL;
+  writeConfigFile(loadedConfig);
+}
 
 let currentApiKey = process.env.KIRA_API_KEY || loadedConfig.apiKey || "";
-let currentModel = process.env.KIRA_MODEL || loadedConfig.model || DEFAULT_MODEL;
+let rawModel = process.env.KIRA_MODEL || loadedConfig.model || DEFAULT_MODEL;
+let currentModel = rawModel === "deepseek-v4-flash-free" ? DEFAULT_MODEL : rawModel;
 
 export function getKiraApiKey(): string {
   const apiKey = currentApiKey || process.env.KIRA_API_KEY;
@@ -58,7 +72,11 @@ export function hasKiraApiKey(): boolean {
 }
 
 export function getKiraModel(): string {
-  return process.env.KIRA_MODEL || currentModel;
+  const model = process.env.KIRA_MODEL || currentModel;
+  if (!model || model === "deepseek-v4-flash-free") {
+    return DEFAULT_MODEL;
+  }
+  return model;
 }
 
 export function setKiraModel(model: string): void {
@@ -70,6 +88,11 @@ export function setKiraModel(model: string): void {
 export function loadConfig(): ConfigData {
   loadedConfig = readConfigFile();
   if (loadedConfig.apiKey && !currentApiKey) currentApiKey = loadedConfig.apiKey;
-  if (loadedConfig.model && !currentModel) currentModel = loadedConfig.model;
+  if (loadedConfig.model && loadedConfig.model !== "deepseek-v4-flash-free") {
+    currentModel = loadedConfig.model;
+  } else {
+    currentModel = DEFAULT_MODEL;
+    loadedConfig.model = DEFAULT_MODEL;
+  }
   return loadedConfig;
 }

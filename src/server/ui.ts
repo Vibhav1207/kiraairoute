@@ -1697,7 +1697,14 @@ select.model-select optgroup {
   }
 
   function getSavedModel() {
-    try { return localStorage.getItem(STORAGE_KEY_MODEL) || ""; } catch { return ""; }
+    try {
+      const m = localStorage.getItem(STORAGE_KEY_MODEL) || "";
+      if (!m || m === "deepseek-v4-flash-free") {
+        localStorage.setItem(STORAGE_KEY_MODEL, "kira-mini-1.0");
+        return "kira-mini-1.0";
+      }
+      return m;
+    } catch { return "kira-mini-1.0"; }
   }
 
   function saveApiKeyLocally(key, model) {
@@ -1998,14 +2005,19 @@ select.model-select optgroup {
       if (!savedKey && data.configured && data.apiKey) {
         savedKey = data.apiKey;
       }
-      if (!savedModel && data.model) {
+      if ((!savedModel || savedModel === "deepseek-v4-flash-free") && data.model && data.model !== "deepseek-v4-flash-free") {
         savedModel = data.model;
+      }
+      if (!savedModel || savedModel === "deepseek-v4-flash-free") {
+        savedModel = "kira-mini-1.0";
       }
 
       if (savedModel && modelSelect) {
         modelSelect.value = savedModel;
-      } else if (data.model && modelSelect) {
+      } else if (data.model && data.model !== "deepseek-v4-flash-free" && modelSelect) {
         modelSelect.value = data.model;
+      } else if (modelSelect) {
+        modelSelect.value = "kira-mini-1.0";
       }
 
       if (savedKey && apiKeyInput) {
@@ -2019,7 +2031,7 @@ select.model-select optgroup {
     } catch {
       if (savedKey && apiKeyInput) {
         apiKeyInput.value = savedKey;
-        if (savedModel && modelSelect) modelSelect.value = savedModel;
+        if (modelSelect) modelSelect.value = (savedModel && savedModel !== "deepseek-v4-flash-free") ? savedModel : "kira-mini-1.0";
         updateModelInspector();
         await startAll(true);
       } else {
