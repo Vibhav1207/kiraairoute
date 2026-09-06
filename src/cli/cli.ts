@@ -1,78 +1,27 @@
 #!/usr/bin/env node
 
-import { existsSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { spawn } from "node:child_process";
 import { DEFAULT_PORT } from "../config/constants.js";
+import { startServer } from "../server/server.js";
 import { openBrowser, printBanner } from "./ui.js";
 
-const CLI_DIR = dirname(fileURLToPath(import.meta.url));
+async function main(): Promise<void> {
+  printBanner();
+  const targetPort = Number(process.env.KIRAAIROUTE_PORT || DEFAULT_PORT);
+  console.log(`\nStarting KiraAI Route on port ${targetPort}...\n`);
 
-function locateServerPath(): string {
-  const candidates = [
-    join(CLI_DIR, "..", "server", "server.js"),
-    join(CLI_DIR, "..", "..", "dist", "server", "server.js"),
-    join(process.cwd(), "dist", "server", "server.js")
-  ];
-  for (const p of candidates) {
-    if (existsSync(p)) return p;
-  }
-  return candidates[0];
-}
-
-const SERVER_PATH = locateServerPath();
-const PORT = Number(process.env.KIRAAIROUTE_PORT || DEFAULT_PORT);
-
-function startServerProcess(): void {
-  if (!existsSync(SERVER_PATH)) {
-    console.error("\nKiraAI Route installation appears incomplete.");
-    console.error(`Server not found: ${SERVER_PATH}\n`);
-    console.error("Run:\n  npm run build\n");
-    process.exit(1);
-  }
-
-  console.log(`\nStarting KiraAI Route on port ${PORT}...\n`);
-
-  const child = spawn(process.execPath, [SERVER_PATH], {
-    env: { ...process.env, KIRAAIROUTE_PORT: String(PORT) },
-    stdio: ["inherit", "pipe", "inherit"]
-  });
+  const { port } = await startServer(targetPort);
 
   let openedBrowser = false;
-
-  child.stdout?.on("data", (chunk: Buffer) => {
-    const text = chunk.toString("utf-8");
-    process.stdout.write(text);
-
-    if (!openedBrowser) {
-      const match = text.match(/http:\/\/127\.0\.0\.1:(\d+)/);
-      if (match) {
-        openedBrowser = true;
-        const boundPort = match[1];
-        setTimeout(() => {
-          openBrowser(`http://127.0.0.1:${boundPort}`);
-        }, 500);
-      }
-    }
-  });
-
-  child.on("error", (error) => {
-    console.error("\nFailed to start KiraAI Route:", error.message);
-    process.exit(1);
-  });
-
-  child.on("exit", (code) => {
-    process.exit(code ?? 0);
-  });
-
-  process.on("SIGINT", () => { child.kill("SIGINT"); });
-  process.on("SIGTERM", () => { child.kill("SIGTERM"); });
+  if (!openedBrowser) {
+    openedBrowser = true;
+    setTimeout(() => {
+      openBrowser(`http://127.0.0.1:${port}`);
+    }, 500);
+  }
 }
 
-function main(): void {
-  printBanner();
-  startServerProcess();
-}
+main().catch((error) => {
+  console.error("\nFailed to start KiraAI Route:", error);
+  process.exit(1);
+});
 
-main();
