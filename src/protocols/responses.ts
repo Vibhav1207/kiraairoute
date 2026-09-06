@@ -74,6 +74,72 @@ export function responsesToChat(body: ResponsesRequest) {
   return payload;
 }
 
+export interface ExtractedToolCall {
+  name: string;
+  arguments: Record<string, any>;
+  cleanedText: string;
+}
+
+export function extractToolCallFromText(text: string): ExtractedToolCall | null {
+  if (!text) return null;
+
+  // 1. Match Qwen style: <tool_call><function=apply_patch><parameter=patchText>...</parameter></function></tool_call>
+  const qwenMatch = text.match(/<tool_call>\s*<function\s*=\s*['"]?([a-zA-Z0-9_]+)['"]?>([\s\S]*?)<\/function>\s*<\/tool_call>/i);
+  if (qwenMatch) {
+    const funcName = qwenMatch[1];
+    const body = qwenMatch[2];
+    const args: Record<string, string> = {};
+
+    const paramRegex = /<parameter\s*=\s*['"]?([a-zA-Z0-9_]+)['"]?>([\s\S]*?)<\/parameter>/gi;
+    let pMatch;
+    while ((pMatch = paramRegex.exec(body)) !== null) {
+      args[pMatch[1]] = pMatch[2].trim();
+    }
+
+    const cleanedText = text.replace(qwenMatch[0], "").trim();
+    return { name: funcName, arguments: args, cleanedText };
+  }
+
+  // 2. Match JSON inside <tool_call>...</tool_call>
+  const jsonMatch = text.match(/<tool_call>\s*(\{[\s\S]*?\})\s*<\/tool_call>/i);
+  if (jsonMatch) {
+    try {
+      const parsed = JSON.parse(jsonMatch[1]);
+      const name = parsed.name || parsed.function || "apply_patch";
+      const args = parsed.arguments || parsed.parameters || {};
+      const cleanedText = text.replace(jsonMatch[0], "").trim();
+      return { name, arguments: typeof args === "string" ? JSON.parse(args) : args, cleanedText };
+    } catch {}
+  }
+
+  // 3. Match GLM style <tool_call:id>apply_patch\n...
+  const glmMatch = text.match(/<tool_call:[^>]+>([a-zA-Z0-9_]+)\s*([\s\S]*?)(?:<\/tool_call:\w+>|$)/i);
+  if (glmMatch) {
+    const funcName = glmMatch[1];
+    const rawVal = glmMatch[2].trim();
+    let args: Record<string, any> = {};
+    try {
+      args = JSON.parse(rawVal);
+    } catch {
+      args = { patchText: rawVal };
+    }
+    const cleanedText = text.replace(glmMatch[0], "").trim();
+    return { name: funcName, arguments: args, cleanedText };
+  }
+
+  // 4. Fallback for raw patch strings: *** Begin Patch ... *** End Patch
+  if (text.includes("*** Begin Patch") && text.includes("*** End Patch")) {
+    const patchMatch = text.match(/(\*\*\* Begin Patch[\s\S]*?\*\*\* End Patch)/);
+    if (patchMatch) {
+      const patchText = patchMatch[1].trim();
+      const cleanedText = text.replace(patchMatch[0], "").trim();
+      return { name: "apply_patch", arguments: { patchText }, cleanedText };
+    }
+  }
+
+  return null;
+}
+
 export function cleanModelText(text: string): string {
   if (!text) return "";
   let cleaned = text;
@@ -91,6 +157,37 @@ export function makeResponsesObject(text: string, usage: any, model: string) {
   const mid = `msg_${crypto.randomUUID().replace(/-/g, "")}`;
 
   const cleanText = cleanModelText(text);
+  const extracted = extractToolCallFromText(cleanText);
+  const messageText = extracted ? extracted.cleanedText : cleanText;
+  const output: any[] = [];
+
+  if (messageText || !extracted) {
+    output.push({
+      type: "message",
+      id: mid,
+      status: "completed",
+      role: "assistant",
+      content: [
+        {
+          type: "output_text",
+          text: messageText || "Applying requested changes...",
+          annotations: []
+        }
+      ]
+    });
+  }
+
+  if (extracted) {
+    const callId = `call_${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
+    output.push({
+      type: "function_call",
+      id: callId,
+      call_id: callId,
+      name: extracted.name,
+      arguments: JSON.stringify(extracted.arguments)
+    });
+  }
+
   const inputTokens = Number(usage?.prompt_tokens || 0);
   const outputTokens = Number(usage?.completion_tokens || 0);
   const totalTokens = Number(usage?.total_tokens || inputTokens + outputTokens);
@@ -101,21 +198,7 @@ export function makeResponsesObject(text: string, usage: any, model: string) {
     created_at: now,
     status: "completed",
     model: model || getKiraModel(),
-    output: [
-      {
-        type: "message",
-        id: mid,
-        status: "completed",
-        role: "assistant",
-        content: [
-          {
-            type: "output_text",
-            text: cleanText,
-            annotations: []
-          }
-        ]
-      }
-    ],
+    output,
     usage: {
       input_tokens: inputTokens,
       input_tokens_details: { cached_tokens: 0 },

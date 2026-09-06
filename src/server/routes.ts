@@ -7,7 +7,7 @@ import { getKiraApiKey, getKiraModel, hasKiraApiKey, setKiraApiKey, setKiraModel
 import { DEFAULT_PORT } from "../config/constants.js";
 import { kiraChat, kiraStream, testKiraConnection, translateErrorMessage } from "../kira/client.js";
 import { getModel, getModels } from "../kira/models.js";
-import { cleanModelText, makeResponsesObject, ResponsesRequest, responsesToChat } from "../protocols/responses.js";
+import { cleanModelText, extractToolCallFromText, makeResponsesObject, ResponsesRequest, responsesToChat } from "../protocols/responses.js";
 import { anthropicToChat, makeAnthropicMessagesResponse, AnthropicMessagesRequest } from "../protocols/anthropic.js";
 import { getMetrics, recordRequest } from "./metrics.js";
 import { getWebPageHtml } from "./ui.js";
@@ -658,10 +658,12 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
         }
 
         const finalText = cleanModelText(fullText || fullReasoning || "Done.");
+        const extractedTool = extractToolCallFromText(finalText);
+        const messageText = extractedTool ? (extractedTool.cleanedText || "Creating files...") : finalText;
 
         // If content was only in reasoning_content, stream it out now
-        if (!fullText && finalText) {
-          const chunks = finalText.match(/\S+\s*/g) || [finalText];
+        if (!fullText && messageText) {
+          const chunks = messageText.match(/\S+\s*/g) || [messageText];
           for (const chunk of chunks) {
             sse("response.output_text.delta", {
               type: "response.output_text.delta",
@@ -680,7 +682,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
           item_id: mid,
           output_index: 0,
           content_index: 0,
-          text: finalText
+          text: messageText
         });
 
         sse("response.content_part.done", {
@@ -691,7 +693,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
           content_index: 0,
           part: {
             type: "output_text",
-            text: finalText,
+            text: messageText,
             annotations: []
           }
         });
@@ -704,7 +706,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
           content: [
             {
               type: "output_text",
-              text: finalText,
+              text: messageText,
               annotations: []
             }
           ]
@@ -717,13 +719,68 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
           item: completedItem
         });
 
+        const outputList: any[] = [completedItem];
+
+        if (extractedTool) {
+          const callId = `call_${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
+          const jsonArgs = JSON.stringify(extractedTool.arguments);
+
+          const toolItem = {
+            type: "function_call",
+            id: callId,
+            call_id: callId,
+            name: extractedTool.name,
+            arguments: jsonArgs
+          };
+
+          sse("response.output_item.added", {
+            type: "response.output_item.added",
+            response_id: rid,
+            output_index: 1,
+            item: {
+              type: "function_call",
+              id: callId,
+              call_id: callId,
+              name: extractedTool.name,
+              arguments: ""
+            }
+          });
+
+          sse("response.function_call_arguments.delta", {
+            type: "response.function_call_arguments.delta",
+            response_id: rid,
+            item_id: callId,
+            output_index: 1,
+            call_id: callId,
+            delta: jsonArgs
+          });
+
+          sse("response.function_call_arguments.done", {
+            type: "response.function_call_arguments.done",
+            response_id: rid,
+            item_id: callId,
+            output_index: 1,
+            call_id: callId,
+            arguments: jsonArgs
+          });
+
+          sse("response.output_item.done", {
+            type: "response.output_item.done",
+            response_id: rid,
+            output_index: 1,
+            item: toolItem
+          });
+
+          outputList.push(toolItem);
+        }
+
         const finalResponseObj = {
           id: rid,
           object: "response",
           created_at: now,
           status: "completed",
           model: successfulModel,
-          output: [completedItem],
+          output: outputList,
           usage: {
             input_tokens: 100,
             input_tokens_details: { cached_tokens: 0 },
