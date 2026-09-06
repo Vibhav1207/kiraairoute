@@ -1,4 +1,4 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -6,8 +6,9 @@ import { autoConfigureAll } from "../cli/codex.js";
 import { getKiraApiKey, getKiraModel, hasKiraApiKey, setKiraApiKey, setKiraModel } from "../cli/config.js";
 import { DEFAULT_PORT } from "../config/constants.js";
 import { kiraChat, kiraStream, testKiraConnection, translateErrorMessage } from "../kira/client.js";
-import { fetchUpstreamModels, getModel, getModels } from "../kira/models.js";
+import { getModel, getModels } from "../kira/models.js";
 import { makeResponsesObject, ResponsesRequest, responsesToChat } from "../protocols/responses.js";
+import { anthropicToChat, makeAnthropicMessagesResponse, AnthropicMessagesRequest } from "../protocols/anthropic.js";
 import { getMetrics, recordRequest } from "./metrics.js";
 import { getWebPageHtml } from "./ui.js";
 
@@ -31,7 +32,12 @@ async function locateSkillFile(): Promise<string | null> {
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
   // Web UI and status endpoints
   app.get("/", async (_request, reply) => {
-    return reply.type("text/html").send(getWebPageHtml());
+    return reply
+      .header("Cache-Control", "no-cache, no-store, must-revalidate")
+      .header("Pragma", "no-cache")
+      .header("Expires", "0")
+      .type("text/html")
+      .send(getWebPageHtml());
   });
 
   app.get("/logo.png", async (_request, reply) => {
@@ -107,55 +113,143 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.get("/api/models", async () => {
-    const apiKey = hasKiraApiKey() ? getKiraApiKey() : undefined;
-    const modelsList = await fetchUpstreamModels(apiKey);
-    return { object: "list", data: modelsList };
+    return { object: "list", data: getModels() };
   });
 
   app.get("/api/status", async () => {
-    return { configured: hasKiraApiKey(), model: getKiraModel(), running: true };
+    return {
+      configured: hasKiraApiKey(),
+      apiKey: hasKiraApiKey() ? getKiraApiKey() : "",
+      model: getKiraModel(),
+      running: true
+    };
+  });
+
+  app.get("/playground", async (_request, reply) => {
+    return reply
+      .header("Cache-Control", "no-cache, no-store, must-revalidate")
+      .header("Pragma", "no-cache")
+      .header("Expires", "0")
+      .type("text/html")
+      .send(getWebPageHtml());
   });
 
   app.get("/api/metrics", async () => {
     return getMetrics();
   });
 
+  app.post("/api/playground", async (request, reply) => {
+    try {
+      const body = (request.body || {}) as { prompt?: string; apiKey?: string; model?: string };
+      const prompt = body.prompt?.trim();
+      if (!prompt) {
+        return reply.code(400).send({ error: { message: "Prompt text is required." } });
+      }
+
+      let apiKey = body.apiKey?.trim();
+      if (apiKey) {
+        setKiraApiKey(apiKey);
+      } else if (hasKiraApiKey()) {
+        apiKey = getKiraApiKey();
+      }
+
+      if (!apiKey) {
+        return reply.code(400).send({
+          error: { message: "No Kira API key found. Paste your key from kiraai.vn/developer in the API key input to test live queries." }
+        });
+      }
+
+      const model = body.model || getKiraModel() || "kira-mini-1.0";
+      const result = await kiraChat({
+        model,
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 1000
+      });
+
+      if (result.status >= 400) {
+        const errObj = result.data as any;
+        const msg = errObj?.error?.message || `Upstream status ${result.status}`;
+        return reply.code(result.status).send({ error: { message: translateErrorMessage(msg) } });
+      }
+
+      const choices = (result.data as any)?.choices;
+      const responseText = choices?.[0]?.message?.content || "No response text generated.";
+
+      return {
+        success: true,
+        model,
+        text: responseText
+      };
+    } catch (error) {
+      return reply.code(500).send({
+        error: { message: error instanceof Error ? error.message : "Playground query failed." }
+      });
+    }
+  });
+
   app.post("/api/setup", async (request, reply) => {
     try {
-      const body = request.body as { apiKey?: string; model?: string };
-      if (!body?.apiKey?.trim()) {
-        return reply.code(400).send({ error: { message: "Kira API key is required." } });
-      }
-      if (!body.model) {
-        return reply.code(400).send({ error: { message: "Model is required." } });
-      }
+      const body = (request.body || {}) as { apiKey?: string; model?: string; skipTest?: boolean };
+      let apiKey = body?.apiKey?.trim();
 
-      const selectedModel = getModel(body.model);
-      if (!selectedModel) {
-        return reply.code(400).send({ error: { message: `Unsupported model: ${body.model}` } });
+      if (apiKey) {
+        setKiraApiKey(apiKey);
+      } else if (hasKiraApiKey()) {
+        apiKey = getKiraApiKey();
+      } else {
+        apiKey = "";
       }
 
-      const apiKey = body.apiKey.trim();
-      setKiraApiKey(apiKey);
-      setKiraModel(selectedModel.id);
-
-      // Fast probe connection test (completes in ~1s)
-      const testResult = await testKiraConnection(selectedModel.id);
-      if (testResult.status >= 400) {
-        return reply.code(testResult.status).send(testResult.data);
+      const modelId = body?.model || getKiraModel() || "kira-mini-1.0";
+      const selectedModel = getModel(modelId);
+      if (selectedModel) {
+        setKiraModel(selectedModel.id);
       }
 
       const host = request.headers.host || `127.0.0.1:${DEFAULT_PORT}`;
       const protocol = (request.headers["x-forwarded-proto"] as string) || "http";
       const baseUrl = `${protocol}://${host}/v1`;
 
-      const configResult = autoConfigureAll({ model: selectedModel.id, baseUrl, apiKey });
+      // 1. ALWAYS write & auto-configure Codex config.toml and environment variables
+      const configResult = autoConfigureAll({
+        model: selectedModel?.id || modelId,
+        baseUrl,
+        apiKey: apiKey || undefined
+      });
+
+      // 2. Perform connection probe if requested and API key is present
+      let connectionWarning: string | null = null;
+      let connected = false;
+      if (!body.skipTest) {
+        if (apiKey) {
+          try {
+            const testResult = await testKiraConnection(selectedModel?.id || modelId);
+            if (testResult.status >= 400) {
+              const errData = testResult.data as any;
+              connectionWarning = errData?.error?.message || `Upstream status ${testResult.status}`;
+            } else {
+              connected = true;
+            }
+          } catch (err) {
+            connectionWarning = err instanceof Error ? err.message : "Connection test timed out.";
+          }
+        } else {
+          connectionWarning = "No Kira API key provided yet. Paste your key from kiraai.vn/developer to enable live model queries.";
+        }
+      }
+
+      const maskedKey = apiKey ? `${apiKey.slice(0, 8)}...${apiKey.slice(-4)}` : "";
 
       return {
         success: true,
-        model: selectedModel.id,
+        connected,
+        model: selectedModel?.id || modelId,
+        modelDetails: selectedModel,
+        hasApiKey: Boolean(apiKey),
+        apiKeyMasked: maskedKey,
         codexConfigured: configResult.success,
-        codexPath: configResult.codexPath
+        codexPath: configResult.codexPath,
+        connectionWarning
       };
     } catch (error) {
       return reply.code(500).send({
@@ -164,18 +258,44 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     }
   });
 
-  app.post("/api/test", async (_request, reply) => {
+  app.post("/api/test", async (request, reply) => {
     try {
+      const body = (request.body || {}) as { apiKey?: string; model?: string };
+      const model = body.model || getKiraModel();
+      let apiKey = body.apiKey?.trim();
+      if (apiKey) {
+        setKiraApiKey(apiKey);
+      }
       if (!hasKiraApiKey()) {
-        return reply.code(400).send({ error: { message: "Kira API key is not configured." } });
+        return reply.code(400).send({
+          success: false,
+          connected: false,
+          error: { message: "Kira API key is not configured. Paste your key from kiraai.vn/developer to enable live testing." }
+        });
       }
-      const result = await testKiraConnection();
+      const result = await testKiraConnection(model);
+      const modelInfo = getModel(model);
       if (result.status >= 400) {
-        return reply.code(result.status).send(result.data);
+        const errData = result.data as any;
+        const msg = errData?.error?.message || `Upstream error status ${result.status}`;
+        return reply.code(result.status).send({
+          success: false,
+          connected: false,
+          model,
+          modelDetails: modelInfo,
+          error: { message: msg }
+        });
       }
-      return { success: true, model: getKiraModel() };
+      return {
+        success: true,
+        connected: true,
+        model,
+        modelDetails: modelInfo
+      };
     } catch (error) {
       return reply.code(500).send({
+        success: false,
+        connected: false,
         error: { message: error instanceof Error ? error.message : "Connection test failed." }
       });
     }
@@ -294,11 +414,10 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
 
   // OpenAI Compatible Endpoints
   app.get("/v1/models", async () => {
-    const apiKey = hasKiraApiKey() ? getKiraApiKey() : undefined;
-    const modelsList = await fetchUpstreamModels(apiKey);
+    const modelsList = getModels();
     return {
       object: "list",
-      data: modelsList.map(model => ({
+      data: modelsList.map((model) => ({
         id: model.id,
         object: "model",
         created: 1700000000,
@@ -666,4 +785,216 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       });
     }
   });
+
+  // Anthropic Messages API Compatible Endpoints (/v1/messages and /messages)
+  const handleAnthropicMessages = async (request: FastifyRequest, reply: FastifyReply) => {
+    const startTime = Date.now();
+    const body = (request.body || {}) as AnthropicMessagesRequest;
+    const model = body?.model && !body.model.startsWith("claude") ? body.model : getKiraModel();
+
+    try {
+      const chatPayload = anthropicToChat(body);
+
+      if (body?.stream === true) {
+        const candidateModels = [
+          model,
+          ...(model !== "mimo-v2.5" ? ["mimo-v2.5"] : []),
+          ...(model !== "hy3" ? ["hy3"] : []),
+          ...(model !== "kira-2.0" ? ["kira-2.0"] : [])
+        ];
+
+        let upstream: Response | null = null;
+        let lastErrorText = "";
+        let successfulModel = model;
+
+        for (const candidate of candidateModels) {
+          try {
+            const payload = { ...chatPayload, model: candidate, stream: true };
+            upstream = await kiraStream(payload, 120000);
+            if (upstream.ok && upstream.body) {
+              successfulModel = candidate;
+              break;
+            }
+            lastErrorText = await upstream.text();
+          } catch (e) {
+            lastErrorText = e instanceof Error ? e.message : "Connection failed";
+          }
+        }
+
+        if (!upstream || !upstream.ok || !upstream.body) {
+          recordRequest(model, 0, Date.now() - startTime, upstream?.status || 502);
+          let errorObj: any;
+          try {
+            errorObj = JSON.parse(lastErrorText);
+            if (errorObj?.error?.message && typeof errorObj.error.message === "string") {
+              errorObj.error.message = translateErrorMessage(errorObj.error.message);
+            }
+          } catch {
+            errorObj = { type: "error", error: { type: "api_error", message: translateErrorMessage(lastErrorText) } };
+          }
+          return reply.code(upstream?.status || 502).send(errorObj);
+        }
+
+        reply.hijack();
+        reply.raw.statusCode = 200;
+        reply.raw.setHeader("Content-Type", "text/event-stream");
+        reply.raw.setHeader("Cache-Control", "no-cache");
+        reply.raw.setHeader("Connection", "keep-alive");
+        reply.raw.setHeader("X-Accel-Buffering", "no");
+
+        const msgId = `msg_${crypto.randomUUID().replace(/-/g, "")}`;
+
+        const sse = (event: string, data: unknown) => {
+          reply.raw.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+        };
+
+        sse("message_start", {
+          type: "message_start",
+          message: {
+            id: msgId,
+            type: "message",
+            role: "assistant",
+            model: successfulModel,
+            content: [],
+            stop_reason: null,
+            stop_sequence: null,
+            usage: { input_tokens: 15, output_tokens: 1 }
+          }
+        });
+
+        sse("content_block_start", {
+          type: "content_block_start",
+          index: 0,
+          content_block: { type: "text", text: "" }
+        });
+
+        const reader = upstream.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let fullText = "";
+        let fullReasoning = "";
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const events = buffer.split(/\r?\n\r?\n/);
+            buffer = events.pop() || "";
+
+            for (const event of events) {
+              const lines = event.split(/\r?\n/);
+              let dataText = "";
+              for (const line of lines) {
+                if (line.startsWith("data:")) {
+                  dataText += line.slice(5).trim();
+                }
+              }
+              if (!dataText || dataText === "[DONE]") continue;
+
+              let parsed: any;
+              try { parsed = JSON.parse(dataText); } catch { continue; }
+
+              const delta = parsed?.choices?.[0]?.delta;
+              const contentChunk = delta?.content;
+              const reasoningChunk = delta?.reasoning_content;
+
+              if (typeof contentChunk === "string" && contentChunk.length > 0) {
+                fullText += contentChunk;
+                sse("content_block_delta", {
+                  type: "content_block_delta",
+                  index: 0,
+                  delta: { type: "text_delta", text: contentChunk }
+                });
+              } else if (typeof reasoningChunk === "string" && reasoningChunk.length > 0) {
+                fullReasoning += reasoningChunk;
+              }
+            }
+          }
+        } finally {
+          reader.releaseLock();
+        }
+
+        const finalText = fullText || fullReasoning || "Done.";
+
+        if (!fullText && finalText) {
+          const chunks = finalText.match(/\S+\s*/g) || [finalText];
+          for (const chunk of chunks) {
+            sse("content_block_delta", {
+              type: "content_block_delta",
+              index: 0,
+              delta: { type: "text_delta", text: chunk }
+            });
+          }
+        }
+
+        sse("content_block_stop", {
+          type: "content_block_stop",
+          index: 0
+        });
+
+        const outTokens = Math.max(1, Math.floor(finalText.length / 4));
+
+        sse("message_delta", {
+          type: "message_delta",
+          delta: { stop_reason: "end_turn", stop_sequence: null },
+          usage: { output_tokens: outTokens }
+        });
+
+        sse("message_stop", {
+          type: "message_stop"
+        });
+
+        reply.raw.end();
+        recordRequest(successfulModel, 15 + outTokens, Date.now() - startTime, 200);
+        return;
+      }
+
+      // Non-streaming fallback
+      const candidateModels = [
+        model,
+        ...(model !== "mimo-v2.5" ? ["mimo-v2.5"] : []),
+        ...(model !== "hy3" ? ["hy3"] : [])
+      ];
+
+      let upstreamResult: { status: number; data: unknown } | null = null;
+      let successfulModel = model;
+
+      for (const candidate of candidateModels) {
+        upstreamResult = await kiraChat({ ...chatPayload, model: candidate }, 1, 10000);
+        if (upstreamResult.status < 400) {
+          successfulModel = candidate;
+          break;
+        }
+      }
+
+      if (!upstreamResult || upstreamResult.status >= 400) {
+        const code = upstreamResult?.status || 502;
+        recordRequest(model, 0, Date.now() - startTime, code);
+        return reply.code(code).send(upstreamResult?.data);
+      }
+
+      const rawData = upstreamResult.data as any;
+      const choices = rawData?.choices || [];
+      const choice = choices[0] || {};
+      const message = choice?.message || {};
+      const text = (typeof message?.content === "string" && message.content) || message?.reasoning_content || "";
+      const usage = rawData?.usage;
+      const responseObj = makeAnthropicMessagesResponse(text, usage, successfulModel);
+
+      recordRequest(successfulModel, responseObj.usage.input_tokens + responseObj.usage.output_tokens, Date.now() - startTime, 200);
+      return reply.send(responseObj);
+    } catch (error) {
+      recordRequest(model, 0, Date.now() - startTime, 500);
+      return reply.code(500).send({
+        type: "error",
+        error: { type: "api_error", message: error instanceof Error ? error.message : "Bridge error" }
+      });
+    }
+  };
+
+  app.post("/v1/messages", handleAnthropicMessages);
+  app.post("/messages", handleAnthropicMessages);
 }
+

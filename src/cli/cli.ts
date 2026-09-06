@@ -8,7 +8,20 @@ import { DEFAULT_PORT } from "../config/constants.js";
 import { openBrowser, printBanner } from "./ui.js";
 
 const CLI_DIR = dirname(fileURLToPath(import.meta.url));
-const SERVER_PATH = join(CLI_DIR, "..", "server", "server.js");
+
+function locateServerPath(): string {
+  const candidates = [
+    join(CLI_DIR, "..", "server", "server.js"),
+    join(CLI_DIR, "..", "..", "dist", "server", "server.js"),
+    join(process.cwd(), "dist", "server", "server.js")
+  ];
+  for (const p of candidates) {
+    if (existsSync(p)) return p;
+  }
+  return candidates[0];
+}
+
+const SERVER_PATH = locateServerPath();
 const PORT = Number(process.env.KIRAAIROUTE_PORT || DEFAULT_PORT);
 
 function startServerProcess(): void {
