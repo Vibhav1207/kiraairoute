@@ -7,7 +7,7 @@ import { getKiraApiKey, getKiraModel, hasKiraApiKey, setKiraApiKey, setKiraModel
 import { DEFAULT_PORT } from "../config/constants.js";
 import { kiraChat, kiraStream, testKiraConnection, translateErrorMessage } from "../kira/client.js";
 import { getModel, getModels } from "../kira/models.js";
-import { makeResponsesObject, ResponsesRequest, responsesToChat } from "../protocols/responses.js";
+import { cleanModelText, makeResponsesObject, ResponsesRequest, responsesToChat } from "../protocols/responses.js";
 import { anthropicToChat, makeAnthropicMessagesResponse, AnthropicMessagesRequest } from "../protocols/anthropic.js";
 import { getMetrics, recordRequest } from "./metrics.js";
 import { getWebPageHtml } from "./ui.js";
@@ -657,7 +657,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
           reader.releaseLock();
         }
 
-        const finalText = fullText || fullReasoning || "Done.";
+        const finalText = cleanModelText(fullText || fullReasoning || "Done.");
 
         // If content was only in reasoning_content, stream it out now
         if (!fullText && finalText) {

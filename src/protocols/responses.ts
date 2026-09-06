@@ -74,11 +74,23 @@ export function responsesToChat(body: ResponsesRequest) {
   return payload;
 }
 
+export function cleanModelText(text: string): string {
+  if (!text) return "";
+  let cleaned = text;
+  cleaned = cleaned.replace(/<think:[a-f0-9]+>[\s\S]*?<\/think:[a-f0-9]+>/gi, "");
+  cleaned = cleaned.replace(/<think:[a-f0-9]+>/gi, "");
+  cleaned = cleaned.replace(/<\/think:[a-f0-9]+>/gi, "");
+  cleaned = cleaned.replace(/<tool_calls:[a-f0-9]+>/gi, "");
+  cleaned = cleaned.replace(/<\/tool_calls:[a-f0-9]+>/gi, "");
+  return cleaned.trim();
+}
+
 export function makeResponsesObject(text: string, usage: any, model: string) {
   const now = Math.floor(Date.now() / 1000);
   const rid = `resp_${crypto.randomUUID().replace(/-/g, "")}`;
   const mid = `msg_${crypto.randomUUID().replace(/-/g, "")}`;
 
+  const cleanText = cleanModelText(text);
   const inputTokens = Number(usage?.prompt_tokens || 0);
   const outputTokens = Number(usage?.completion_tokens || 0);
   const totalTokens = Number(usage?.total_tokens || inputTokens + outputTokens);
@@ -98,7 +110,7 @@ export function makeResponsesObject(text: string, usage: any, model: string) {
         content: [
           {
             type: "output_text",
-            text: text,
+            text: cleanText,
             annotations: []
           }
         ]
