@@ -6,7 +6,7 @@ import { autoConfigureAll } from "../cli/codex.js";
 import { getKiraApiKey, getKiraModel, hasKiraApiKey, setKiraApiKey, setKiraModel } from "../cli/config.js";
 import { DEFAULT_PORT } from "../config/constants.js";
 import { kiraChat, kiraStream, testKiraConnection, translateErrorMessage } from "../kira/client.js";
-import { getModel, getModels } from "../kira/models.js";
+import { getCandidateModels, getModel, getModels } from "../kira/models.js";
 import { cleanModelText, extractToolCallFromText, makeResponsesObject, ResponsesRequest, responsesToChat } from "../protocols/responses.js";
 import { anthropicToChat, makeAnthropicMessagesResponse, AnthropicMessagesRequest } from "../protocols/anthropic.js";
 import { getMetrics, recordRequest } from "./metrics.js";
@@ -417,7 +417,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     const modelsList = getModels();
     return {
       object: "list",
-      data: modelsList.map((model) => ({
+      data: modelsList.map((model: any) => ({
         id: model.id,
         object: "model",
         created: 1700000000,
@@ -433,22 +433,22 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
 
     try {
       if (body?.stream === true) {
+        const candidateModels = getCandidateModels(model);
         let upstream: Response | null = null;
         let lastErrorText = "";
+        let successfulModel = model;
 
-        for (let attempt = 0; attempt < 3; attempt++) {
+        for (const candidate of candidateModels) {
           try {
-            upstream = await kiraStream(body);
-            if (upstream.ok && upstream.body) break;
-            lastErrorText = await upstream.text();
-            if (attempt < 2) {
-              await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
+            const payload = { ...body, model: candidate };
+            upstream = await kiraStream(payload, 120000);
+            if (upstream.ok && upstream.body) {
+              successfulModel = candidate;
+              break;
             }
+            lastErrorText = await upstream.text();
           } catch (e) {
             lastErrorText = e instanceof Error ? e.message : "Connection failed";
-            if (attempt < 2) {
-              await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
-            }
           }
         }
 
@@ -513,9 +513,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
 
       // If Codex requested streaming
       if (body?.stream === true) {
-        const candidateModels = model === "kira-auto"
-          ? ["kira-mini-1.0", "kira-2.0", "mimo-v2.5", "hy3"]
-          : [model];
+        const candidateModels = getCandidateModels(model);
 
         let upstream: Response | null = null;
         let lastErrorText = "";
@@ -798,9 +796,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       }
 
       // Non-streaming fallback
-      const candidateModels = model === "kira-auto"
-        ? ["kira-mini-1.0", "kira-2.0", "mimo-v2.5", "hy3"]
-        : [model];
+      const candidateModels = getCandidateModels(model);
 
       let upstreamResult: { status: number; data: unknown } | null = null;
       let successfulModel = model;
@@ -848,9 +844,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       const chatPayload = anthropicToChat(body);
 
       if (body?.stream === true) {
-        const candidateModels = model === "kira-auto"
-          ? ["kira-mini-1.0", "kira-2.0", "mimo-v2.5", "hy3"]
-          : [model];
+        const candidateModels = getCandidateModels(model);
 
         let upstream: Response | null = null;
         let lastErrorText = "";

@@ -880,3 +880,39 @@ export function getModel(modelId: string): ModelDefinition | undefined {
     description: "Kira AI compatible model endpoint."
   };
 }
+
+export function isFreeModel(modelId: string): boolean {
+  const info = getModel(modelId);
+  if (!info) return false;
+  return info.free || info.category === "free_no_deposit" || info.category === "free_balance_required";
+}
+
+export function getCandidateModels(requestedModel: string): string[] {
+  const model = requestedModel || "kira-mini-1.0";
+
+  // If requestedModel is kira-auto or any FREE model (0 VND deposit or >0 VND balance required free model)
+  if (model === "kira-auto" || isFreeModel(model)) {
+    const freeCandidates = [
+      model === "kira-auto" ? "kira-mini-1.0" : model,
+      "kira-mini-1.0",
+      "kira-2.0",
+      "glm-5.3-flash",
+      "qwen3.8-flash",
+      "deepseek-v4-flash-free",
+      "mimo-v2.5",
+      "hy3",
+      "gpt-5.6-luna-free"
+    ];
+
+    const set = new Set<string>();
+    for (const m of freeCandidates) {
+      if (m && isFreeModel(m)) {
+        set.add(m);
+      }
+    }
+    return Array.from(set);
+  }
+
+  // If requestedModel is a PAID model, STRICTLY try ONLY that model (no auto switching to paid models)
+  return [model];
+}
