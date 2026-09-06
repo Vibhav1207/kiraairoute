@@ -176,6 +176,20 @@ export const KIRA_MODELS: readonly ModelDefinition[] = [
     description: "Breakthrough multi-agent AI model with real-time speech processing and voice synthesis."
   },
   {
+    id: "minimax-m2.7",
+    name: "MiniMax M2.7",
+    provider: "MiniMax",
+    category: "free_balance_required",
+    categoryLabel: "Free (Requires Balance > 0 VND)",
+    type: "voice",
+    typeLabel: "Multi-Agent & Audio/Voice",
+    free: true,
+    balance_required: true,
+    daily_limit: "250M tokens/day",
+    context_window: 128_000,
+    description: "Breakthrough multi-agent AI model with real-time speech processing and voice audio synthesis."
+  },
+  {
     id: "gpt-5.6-luna-free",
     name: "GPT 5.6 Luna Free",
     provider: "OpenAI Compatible",

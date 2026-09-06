@@ -113,6 +113,7 @@ npm start
 | **GLM 5.3 Flash** | `glm-5.3-flash` | GLM / Z.AI | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | High-Performance Multimodal |
 | **Ling 3.0 Flash Sante** | `ling-3.0-flash-sante-free` | InclusionAI | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | Medical & Bio-Health AI |
 | **MiniMax M3 Free** | `minimax-m3-free` | MiniMax | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | Multi-Agent & Audio Synthesis |
+| **MiniMax M2.7** | `minimax-m2.7` | MiniMax | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | Conversational Multi-Agent & Voice |
 | **GPT 5.6 Luna Free** | `gpt-5.6-luna-free` | OpenAI Compatible | Free (Balance > 0 VND) | 250M tokens/day | 1,000,000 | Creative Writing & Structural Analysis |
 | **Claude Fable 5.1 Free** | `claude-fable-5.1-free` | Anthropic | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | General Reasoning & Logic |
 | **GPT-6 Astra Free** | `gpt-6-astra-free` | OpenAI | Free (Balance > 0 VND) | 250M tokens/day | 1,000,000 | Next-Gen Reasoning & Code |
