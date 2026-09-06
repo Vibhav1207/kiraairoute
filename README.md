@@ -4,7 +4,7 @@
 
 **High-performance, zero-latency OpenAI-compatible local AI gateway and LLM proxy for Kira AI.**
 
-*Route Kira AI models to OpenAI-compatible coding tools like Codex, Claude Code, Cursor, and custom developer scripts.*
+*Route Kira AI models to OpenAI-compatible coding tools like Codex, Cursor, Continue, and custom developer scripts.*
 
 [![npm version](https://img.shields.io/npm/v/@vibhav1207/kiraairoute.svg?style=for-the-badge&color=6366f1)](https://www.npmjs.com/package/@vibhav1207/kiraairoute)
 [![License](https://img.shields.io/badge/license-MIT-6366f1.svg?style=for-the-badge)](LICENSE)
@@ -22,25 +22,25 @@
 
 **KiraAI Route** is a lightweight local AI gateway and API proxy that translates standard OpenAI API requests into native calls for the **Kira AI** platform (`https://kiraai.vn`).
 
-By running a local server on `http://127.0.0.1:4010/v1`, KiraAI Route allows any OpenAI-compatible tool—including **Codex**, **Claude Code**, **Cursor**, **Continue**, and the official **OpenAI SDK**—to seamless use free daily token allowances for models like `kira-mini-1.0`, `mimo-v2.5`, `deepseek-v4-flash-free`, `qwen3.8-flash`, and `glm-5.3`.
+By running a local proxy server on `http://127.0.0.1:4010/v1`, KiraAI Route enables any OpenAI-compatible tool—including **Codex**, **Cursor**, **Continue**, and the official **OpenAI SDK**—to seamlessly tap into generous daily free token allowances for top models like `kira-mini-1.0`, `mimo-v2.5`, `deepseek-v4-flash-free`, `deepseek-v4-flash-vision-exp`, `qwen3.8-flash`, `glm-5.3-flash`, and `gpt-5.6-luna-free`.
 
 ---
 
 ## ⚡ Quick Start
 
-Run instantly without installation:
+Run instantly without global installation:
 
 ```bash
 npx @vibhav1207/kiraairoute
 ```
 
-On first run, KiraAI Route automatically launches a local developer web dashboard at **`http://127.0.0.1:4010`**:
+On launch, KiraAI Route opens the **shadcn-inspired developer dashboard** at **`http://127.0.0.1:4010`**:
 
 1. Enter your **Kira API Key** (obtainable from [kiraai.vn/developer](https://kiraai.vn/developer/)).
-2. Select your target AI model (e.g. `Kira Mini 1.0` or `DeepSeek V4 Flash`).
-3. Click **Test & Start**.
+2. Select your target model (e.g. `Kira Mini 1.0`, `DeepSeek V4 Flash`, or `Qwen 3.8 Flash`).
+3. Click **Configure Gateway & AI Models**.
 
-Your local OpenAI-compatible endpoint will be ready at:
+Your local OpenAI-compatible endpoint is instantly active at:
 
 ```text
 http://127.0.0.1:4010/v1
@@ -50,13 +50,13 @@ http://127.0.0.1:4010/v1
 
 ## ✨ Key Features
 
-- ⚙️ **Automatic Zero-Config Setup**: Automatically synchronizes `~/.codex/config.toml` and system environment variables (`OPENAI_BASE_URL`, `ANTHROPIC_BASE_URL`, `KIRA_API_KEY`) so Codex and Claude Code work instantly without manual file edits.
-- 🔌 **Dual Protocol Support**: Native OpenAI `/v1/chat/completions` and `/v1/responses` endpoints with automatic format conversion.
-- ⚡ **Real-Time Streaming**: High-speed Server-Sent Events (SSE) streaming for real-time response rendering in coding assistants.
-- 🔒 **Secure Local Key Storage**: API keys are saved locally in `~/.kiraairoute/config.json`. Keys are never transmitted anywhere except directly to official Kira AI endpoints (`https://kiraai.vn/api/v1`).
-- 🔄 **Automatic Port Fallback**: If port `4010` is occupied, the gateway automatically finds and binds to the next available port (`4011`, `4012`, etc.) and routes the web dashboard & Codex config.
-- 📊 **Developer Web Dashboard & Metrics**: Built-in visual dashboard featuring one-click Codex/Claude launchers, password visibility toggle, model inspector, and real-time request metrics.
-- 🌐 **Environment Variable Overrides**: Support for `KIRA_API_KEY`, `KIRA_MODEL`, and `KIRAAIROUTE_PORT` for headless CI/CD and container workflows.
+- 🔑 **Persistent API Key & Auto-Start**: Saved API keys are stored securely in browser `localStorage` after validation. Next time you launch, the gateway automatically loads your key, initializes your selected model, and starts without requiring re-entry.
+- ⚙️ **Automatic Zero-Config Setup**: Automatically syncs `~/.codex/config.toml` and local environment variables (`OPENAI_BASE_URL`, `OPENAI_API_KEY`) for zero-friction integration with Codex CLI and apps.
+- 📡 **Real-Time Dynamic Health & Ping Monitor**: Features a live latency ping meter (measuring browser-to-gateway roundtrip in real time every 3.5s) with live equalizer animations and route health signals (**Optimal**, **Degraded**, **Offline**).
+- 🔌 **Dual Protocol Support**: Native support for OpenAI `/v1/chat/completions` and `/v1/responses` endpoints with SSE (Server-Sent Events) streaming.
+- 🎨 **shadcn Dark Zinc UI Aesthetic**: Clean, modern dark mode interface (`#09090b` / `#18181b` / `#27272a`) built with clean typography, crisp borders, ambient background glow, SVG icons, and zero emojis.
+- 🔒 **Privacy & Local Security**: API keys are saved locally. Keys are only transmitted directly to official Kira AI upstream servers (`https://kiraai.vn/api/v1`).
+- 🔄 **Automatic Port Fallback**: Auto-binds to the next available port (`4010`, `4011`, `4012`, etc.) if port 4010 is occupied.
 
 ---
 
@@ -98,35 +98,38 @@ npm start
 
 ## 🤖 Supported Models
 
-Kira AI provides generous daily token allowances for the following supported models:
+Kira AI provides daily free token allowances for the following models:
 
-| Model Name | Model ID | Provider | Balance Required | Daily Token Allowance | Context Window |
-|---|---|---|---|---|---|
-| **Kira Mini 1.0** | `kira-mini-1.0` | Kira | ❌ None | 150M tokens/day | 1,000,000 |
-| **Kira Mini 2.0** | `kira-2.0` | Kira | ❌ None | 150M tokens/day | 1,000,000 |
-| **Mimo V2.5** | `mimo-v2.5` | Xiaomi | ❌ None | 150M tokens/day | 128,000 |
-| **Tencent Hy3 Free** | `hy3` | Tencent | ❌ None | 150M tokens/day | 128,000 |
-| **DeepSeek V4 Flash** | `deepseek-v4-flash-free` | DeepSeek | ⚠️ > 0 VND | 250M tokens/day | 1,000,000 |
-| **DeepSeek V4 Vision** | `deepseek-v4-flash-vision-exp` | DeepSeek | ⚠️ > 0 VND | 250M tokens/day | 128,000 |
-| **Qwen 3.8 Flash** | `qwen3.8-flash` | Qwen | ⚠️ > 0 VND | 250M tokens/day | 128,000 |
-| **GLM 5.3 Flash** | `glm-5.3-flash` | GLM | ⚠️ > 0 VND | 250M tokens/day | 128,000 |
-| **GLM 5.3** | `glm-5.3` | GLM | ⚠️ > 0 VND | 250M tokens/day | 1,000,000 |
-| **GPT 5.6 Luna Free** | `gpt-5.6-luna-free` | OpenAI | ⚠️ > 0 VND | 250M tokens/day | 1,000,000 |
-| **Qwen 3.8 27B Free** | `qwen3.8-27b-free` | Qwen | ⚠️ > 0 VND | 250M tokens/day | 128,000 |
+| Model Name | Model ID | Provider | Balance Requirement | Daily Allowance | Context Window | Best Used For |
+|---|---|---|---|---|---|---|
+| **Kira Auto** | `kira-auto` | Kira AI | Free (0 Deposit) | 150M tokens/day | 1,000,000 | Smart Auto Routing / Speed |
+| **Kira Mini 2.0** | `kira-2.0` | Kira AI | Free (0 Deposit) | 150M tokens/day | 1,000,000 | Fast Text & High-Speed Coding |
+| **Kira Mini 1.0** | `kira-mini-1.0` | Kira AI | Free (0 Deposit) | 150M tokens/day | 1,000,000 | General Text & Daily Coding |
+| **Mimo V2.5** | `mimo-v2.5` | Xiaomi | Free (0 Deposit) | 150M tokens/day | 128,000 | Logic, Math & Reasoning |
+| **Tencent Hy3 Free** | `hy3` | Tencent | Free (0 Deposit) | 150M tokens/day | 128,000 | Autonomous AI Agents & Code |
+| **DeepSeek V4 Flash** | `deepseek-v4-flash-free` | DeepSeek | Free (Balance > 0 VND) | 250M tokens/day | 1,000,000 | High-Speed Code & Large Context |
+| **DeepSeek V4 Vision** | `deepseek-v4-flash-vision-exp` | DeepSeek | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | Multimodal Vision & Diagrams |
+| **Qwen 3.8 Flash** | `qwen3.8-flash` | Qwen | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | Software Engineering |
+| **Qwen 3.8 27B Free** | `qwen3.8-27b-free` | Qwen | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | General Text & Coding |
+| **GLM 5.3 Flash** | `glm-5.3-flash` | GLM / Z.AI | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | High-Performance Multimodal |
+| **Ling 3.0 Flash Sante** | `ling-3.0-flash-sante-free` | InclusionAI | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | Medical & Bio-Health AI |
+| **MiniMax M3 Free** | `minimax-m3-free` | MiniMax | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | Multi-Agent & Audio Synthesis |
+| **MiniMax M2.7** | `minimax-m2.7` | MiniMax | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | Conversational Multi-Agent |
+| **GPT 5.6 Luna Free** | `gpt-5.6-luna-free` | OpenAI Compatible | Free (Balance > 0 VND) | 250M tokens/day | 1,000,000 | Creative Writing & Structural Analysis |
 
 ---
 
-## 💻 Connecting Codex, Claude Code, Cursor & AI Tools
+## 💻 Connecting Codex, Cursor, Continue & AI Tools
 
-KiraAI Route **automatically configures Codex and Claude Code** upon startup and model selection. You can also connect any custom OpenAI or Anthropic tool manually:
+Configure any OpenAI client to point to your local gateway endpoint:
 
 - **Base URL**: `http://127.0.0.1:4010/v1`
-- **API Key**: Your Kira API Key (or any placeholder string if configured in Web UI)
-- **Model**: Any model ID listed above (e.g. `kira-mini-1.0`)
+- **API Key**: Your Kira API Key
+- **Model**: Any supported model ID (e.g. `kira-mini-1.0` or `deepseek-v4-flash-free`)
 
-### 1. Codex (Automatic)
+### 1. Codex CLI Integration
 
-When you click **Test & Start Gateway** in the dashboard, your `~/.codex/config.toml` is automatically configured:
+When you click **Configure Gateway & AI Models**, your `~/.codex/config.toml` is automatically configured:
 
 ```toml
 model = "kira-mini-1.0"
@@ -139,49 +142,36 @@ env_key = "KIRA_API_KEY"
 wire_api = "responses"
 ```
 
-You can click **Launch Codex** in the dashboard or run `codex` directly from your terminal.
-
-### 2. Claude Code (Automatic)
-
-When you click **Test & Start Gateway**, system environment variables `ANTHROPIC_BASE_URL` and `ANTHROPIC_API_KEY` are automatically registered:
-
-```bash
-# Launch Claude Code directly
-claude
-```
-
-Or click **⚡ Launch Claude Code** directly from the web dashboard.
-
-### 3. OpenAI Node.js SDK Example
+### 2. OpenAI Node.js SDK Example
 
 ```typescript
 import OpenAI from "openai";
 
 const client = new OpenAI({
   baseURL: "http://127.0.0.1:4010/v1",
-  apiKey: "KIRA_API_KEY"
+  apiKey: "YOUR_KIRA_API_KEY"
 });
 
 const completion = await client.chat.completions.create({
   model: "kira-mini-1.0",
-  messages: [{ role: "user", content: "Write a high-performance HTTP server in Node.js TypeScript." }]
+  messages: [{ role: "user", content: "Write a Fastify REST API endpoint in TypeScript." }]
 });
 
 console.log(completion.choices[0].message.content);
 ```
 
-### 4. OpenAI Python SDK Example
+### 3. OpenAI Python SDK Example
 
 ```python
 from openai import OpenAI
 
 client = OpenAI(
     base_url="http://127.0.0.1:4010/v1",
-    api_key="KIRA_API_KEY"
+    api_key="YOUR_KIRA_API_KEY"
 )
 
 response = client.chat.completions.create(
-    model="kira-mini-1.0",
+    model="deepseek-v4-flash-free",
     messages=[{"role": "user", "content": "Explain async/await in Python."}]
 )
 
@@ -237,16 +227,16 @@ npm install
 # Build TypeScript to dist/
 npm run build
 
-# Start gateway server
+# Start local gateway server
 npm start
 ```
 
-### Modular Directory Layout
+### Directory Structure
 
 ```text
 kiraairoute/
 ├── docs/
-│   └── images/           # Visual documentation screenshots
+│   └── images/           # Documentation images and screenshots
 ├── src/
 │   ├── cli/
 │   │   ├── cli.ts        # Main CLI executable script
@@ -256,7 +246,7 @@ kiraairoute/
 │   ├── server/
 │   │   ├── server.ts     # Fastify application factory & port binding
 │   │   ├── routes.ts     # API & Web setup route definitions
-│   │   ├── ui.ts         # Web dashboard HTML/CSS/JS template
+│   │   ├── ui.ts         # Web dashboard HTML/CSS/JS template (shadcn dark UI)
 │   │   ├── metrics.ts    # Real-time request metrics tracking
 │   │   └── middleware.ts # Fastify CORS middleware registration
 │   ├── kira/
@@ -268,7 +258,7 @@ kiraairoute/
 │   ├── config/
 │   │   └── constants.ts  # Shared application default constants
 │   └── index.ts          # Main package export entry point
-├── dist/                 # Compiled ES module JavaScript output
+├── dist/                 # Compiled JavaScript output
 ├── README.md
 ├── package.json
 ├── tsconfig.json
@@ -280,7 +270,7 @@ kiraairoute/
 ## 🔒 Security
 
 - Never commit your Kira API key to public repositories.
-- KiraAI Route saves your API key locally in `~/.kiraairoute/config.json`.
+- KiraAI Route saves your API key locally in browser `localStorage` and `~/.kiraairoute/config.json`.
 - Keys are never transmitted anywhere except directly to official Kira AI endpoints (`https://kiraai.vn/api/v1`).
 
 ---

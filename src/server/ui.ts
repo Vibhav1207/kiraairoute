@@ -12,7 +12,7 @@ function getPackageVersion(): string {
       if (data?.version) return data.version;
     }
   } catch { }
-  return "0.4.1";
+  return "0.5.0";
 }
 
 const currentVersion = getPackageVersion();
@@ -28,23 +28,23 @@ export function getWebPageHtml(): string {
 <style>
 :root {
   color-scheme: dark;
-  --bg-app: #100d0a;
-  --bg-card: #191410;
-  --bg-input: #120e0b;
-  --bg-hover: #261e18;
-  --border-color: #352920;
-  --border-hover: #544033;
-  --text-primary: #f5eedc;
-  --text-secondary: #c5b49f;
-  --text-muted: #8a7765;
-  --accent-primary: #c88d51;
-  --accent-hover: #d99e62;
-  --accent-glow: rgba(200, 141, 81, 0.25);
+  --bg-app: #09090b;
+  --bg-card: #18181b;
+  --bg-input: #09090b;
+  --bg-hover: #27272a;
+  --border-color: #27272a;
+  --border-hover: #3f3f46;
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --accent-primary: #d97706;
+  --accent-hover: #f59e0b;
+  --accent-glow: rgba(217, 119, 6, 0.15);
   --status-green: #10b981;
   --status-amber: #f59e0b;
   --status-red: #ef4444;
-  --radius-card: 16px;
-  --radius-input: 10px;
+  --radius-card: 12px;
+  --radius-input: 8px;
   --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
@@ -61,13 +61,36 @@ body {
   display: flex;
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
+  position: relative;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: -160px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 700px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.09) 0%, rgba(16, 185, 129, 0.04) 45%, transparent 75%);
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+  animation: ambientFloat 14s ease-in-out infinite alternate;
+}
+
+@keyframes ambientFloat {
+  0% { transform: translateX(-50%) translateY(0) scale(1); opacity: 0.7; }
+  50% { transform: translateX(-47%) translateY(35px) scale(1.1); opacity: 0.95; }
+  100% { transform: translateX(-53%) translateY(15px) scale(0.92); opacity: 0.75; }
 }
 
 /* Header Navbar */
 .navbar {
-  height: 68px;
+  height: 64px;
   border-bottom: 1px solid var(--border-color);
-  background: rgba(25, 20, 16, 0.8);
+  background: rgba(18, 18, 27, 0.85);
   backdrop-filter: blur(12px);
   padding: 0 32px;
   display: flex;
@@ -81,14 +104,18 @@ body {
 .nav-brand {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 .brand-logo-img {
-  height: 38px;
+  height: 32px;
   width: auto;
   object-fit: contain;
-  filter: drop-shadow(0 2px 8px rgba(200, 141, 81, 0.3));
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.brand-logo-img:hover {
+  transform: scale(1.08) rotate(-3deg);
 }
 
 .brand-text-group {
@@ -98,20 +125,26 @@ body {
 }
 
 .brand-title {
-  font-size: 17px;
-  font-weight: 800;
+  font-size: 16px;
+  font-weight: 700;
   letter-spacing: -0.3px;
   color: var(--text-primary);
 }
 
 .version-pill {
   font-size: 11px;
-  font-weight: 700;
-  background: rgba(200, 141, 81, 0.15);
-  color: var(--accent-primary);
-  border: 1px solid rgba(200, 141, 81, 0.3);
+  font-weight: 600;
+  background: rgba(39, 39, 42, 0.8);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
   padding: 2px 8px;
   border-radius: 20px;
+  transition: all 0.2s ease;
+}
+
+.version-pill:hover {
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
 }
 
 .nav-status {
@@ -123,30 +156,49 @@ body {
 }
 
 .status-dot {
+  position: relative;
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--status-green);
-  box-shadow: 0 0 10px var(--status-green);
+  box-shadow: 0 0 8px var(--status-green);
+}
+
+.status-dot::after {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--status-green);
+  animation: radarPulse 2.2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+  opacity: 0;
+}
+
+@keyframes radarPulse {
+  0% { transform: scale(0.4); opacity: 0.9; }
+  100% { transform: scale(1.9); opacity: 0; }
 }
 
 /* Main Container */
 .main-wrapper {
   max-width: 1040px;
   width: 100%;
-  margin: 40px auto;
+  margin: 36px auto;
   padding: 0 24px;
   flex: 1;
 }
 
 .page-header {
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 
 .page-title {
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: -0.5px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
   color: var(--text-primary);
   margin-bottom: 6px;
 }
@@ -160,7 +212,7 @@ body {
 .content-grid {
   display: grid;
   grid-template-columns: 1fr 380px;
-  gap: 28px;
+  gap: 24px;
   align-items: start;
 }
 
@@ -168,17 +220,30 @@ body {
   .content-grid { grid-template-columns: 1fr; }
 }
 
-/* Form Card */
-.form-card {
+/* Form Card (shadcn Card design) */
+.form-card, .status-panel, .skill-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-card);
-  padding: 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  animation: cardFadeUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.form-card:hover, .status-panel:hover, .skill-card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+@keyframes cardFadeUp {
+  0% { opacity: 0; transform: translateY(16px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 .form-group {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .form-group:last-child { margin-bottom: 0; }
@@ -186,7 +251,7 @@ body {
 .form-label {
   display: block;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 8px;
 }
@@ -200,99 +265,99 @@ body {
 input[type="text"],
 input[type="password"] {
   width: 100%;
-  height: 46px;
+  height: 40px;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-input);
   color: var(--text-primary);
-  padding: 0 42px 0 14px;
+  padding: 0 40px 0 12px;
   font-family: var(--font-sans);
   font-size: 13px;
   outline: none;
-  transition: all 0.15s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
 }
 
 select.model-select {
   color-scheme: dark;
   width: 100%;
-  height: 48px;
-  background-color: #1a1410;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23c88d51' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  height: 42px;
+  background-color: var(--bg-input);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 14px center;
+  background-position: right 12px center;
   background-size: 16px;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-input);
-  color: #f5eedc;
-  padding: 0 40px 0 14px;
+  color: var(--text-primary);
+  padding: 0 38px 0 12px;
   font-family: var(--font-sans);
-  font-size: 13.5px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
   outline: none;
   appearance: none;
   -webkit-appearance: none;
-  -moz-appearance: none;
   cursor: pointer;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 select.model-select:focus {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px var(--accent-glow);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
 }
 
 select.model-select option {
-  background-color: #191410;
-  color: #f5eedc;
-  padding: 10px 14px;
-  font-size: 13px;
-  font-weight: 500;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  padding: 8px 12px;
 }
 
 select.model-select optgroup {
-  background-color: #120e0b;
-  color: #c88d51;
-  font-weight: 700;
-  font-size: 12px;
+  background-color: var(--bg-app);
+  color: var(--accent-primary);
+  font-weight: 600;
 }
 
 .eye-btn {
   position: absolute;
-  right: 8px;
+  right: 6px;
   top: 50%;
   transform: translateY(-50%);
   background: transparent;
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 8px;
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 4px;
-  transition: color 0.15s ease;
+  transition: color 0.15s ease, transform 0.15s ease;
   z-index: 2;
 }
 
-.eye-btn svg {
-  pointer-events: none;
-}
-
-.eye-btn:hover { color: var(--text-primary); }
+.eye-btn svg { pointer-events: none; }
+.eye-btn:hover { color: var(--text-primary); transform: translateY(-50%) scale(1.1); }
 
 .help-text {
-  margin-top: 8px;
+  margin-top: 6px;
   font-size: 12px;
   color: var(--text-muted);
 }
 
 .help-text a {
-  color: var(--accent-primary);
-  text-decoration: none;
-  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.15s ease;
 }
 
-.help-text a:hover { text-decoration: underline; }
+.help-text a:hover { color: var(--text-primary); }
 
 /* Model Detail Inspector Card */
 .model-inspector {
@@ -300,20 +365,26 @@ select.model-select optgroup {
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-input);
-  padding: 14px 16px;
+  padding: 14px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  transition: all 0.25s ease;
 }
 
-.inspector-info {
-  display: flex;
-  flex-direction: column;
+.model-inspector.updated {
+  animation: inspectorPulse 0.35s ease-out;
+}
+
+@keyframes inspectorPulse {
+  0% { transform: scale(0.98); border-color: var(--accent-primary); }
+  50% { transform: scale(1.01); }
+  100% { transform: scale(1); }
 }
 
 .inspector-title {
-  font-weight: 700;
   font-size: 14px;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
@@ -323,34 +394,53 @@ select.model-select optgroup {
 }
 
 .inspector-badge-group {
-  text-align: right;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .badge-tag {
   font-size: 11px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 20px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: inline-block;
+  transition: transform 0.2s ease;
 }
 
-.tag-free { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); }
-.tag-balance { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); }
+.badge-tag:hover {
+  transform: scale(1.04);
+}
+
+.tag-free {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.tag-balance {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
 
 .inspector-limits {
   font-size: 11px;
   color: var(--text-muted);
+  font-family: var(--font-mono);
 }
 
 /* Modal Overlay & Dialog */
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(10, 8, 6, 0.82);
-  backdrop-filter: blur(8px);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -366,12 +456,12 @@ select.model-select optgroup {
 }
 .modal-card {
   background: var(--bg-card);
-  border: 1px solid var(--border-hover);
-  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
   width: 100%;
-  max-width: 580px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(200, 141, 81, 0.15);
-  transform: translateY(20px) scale(0.96);
+  max-width: 540px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.7);
+  transform: translateY(16px) scale(0.96);
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
   display: flex;
@@ -381,36 +471,30 @@ select.model-select optgroup {
   transform: translateY(0) scale(1);
 }
 .modal-header {
-  padding: 20px 24px;
+  padding: 18px 20px;
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(255, 255, 255, 0.02);
 }
 .modal-title-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 .status-indicator-dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: var(--status-green);
   box-shadow: 0 0 10px var(--status-green);
 }
-.status-indicator-dot.warning {
-  background: var(--status-amber);
-  box-shadow: 0 0 10px var(--status-amber);
-}
-.status-indicator-dot.error {
-  background: var(--status-red);
-  box-shadow: 0 0 10px var(--status-red);
-}
+.status-indicator-dot.warning { background: var(--status-amber); box-shadow: 0 0 10px var(--status-amber); }
+.status-indicator-dot.error { background: var(--status-red); box-shadow: 0 0 10px var(--status-red); }
+
 .modal-title {
-  font-size: 17px;
-  font-weight: 800;
+  font-size: 16px;
+  font-weight: 700;
   color: var(--text-primary);
 }
 .modal-subtitle {
@@ -421,78 +505,61 @@ select.model-select optgroup {
   background: transparent;
   border: none;
   color: var(--text-muted);
-  font-size: 24px;
+  font-size: 20px;
   cursor: pointer;
   line-height: 1;
   padding: 4px 8px;
-  border-radius: 6px;
-  transition: color 0.15s ease;
+  border-radius: 4px;
+  transition: color 0.15s ease, transform 0.15s ease;
 }
-.modal-close-btn:hover { color: var(--text-primary); }
+.modal-close-btn:hover { color: var(--text-primary); transform: scale(1.15); }
 
 .modal-body {
-  padding: 24px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  max-height: 75vh;
+  gap: 16px;
+  max-height: 70vh;
   overflow-y: auto;
 }
 .modal-status-banner {
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 12px 14px;
   display: flex;
   align-items: flex-start;
   gap: 10px;
   font-size: 13px;
   line-height: 1.45;
-  transition: transform 0.3s ease-in-out, background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-  transform: scale(1);
-}
-.modal-status-banner:hover {
-  transform: scale(1.02);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  border: 1px solid transparent;
 }
 .modal-status-banner.success {
-  background: rgba(20, 83, 45, 0.45);
-  border-left: 4px solid #22c55e;
+  background: rgba(20, 83, 45, 0.3);
+  border-color: rgba(34, 197, 94, 0.3);
   color: #f0fdf4;
 }
-.modal-status-banner.success:hover {
-  background: rgba(20, 83, 45, 0.65);
-}
 .modal-status-banner.info {
-  background: rgba(30, 58, 138, 0.45);
-  border-left: 4px solid #3b82f6;
+  background: rgba(30, 58, 138, 0.3);
+  border-color: rgba(59, 130, 246, 0.3);
   color: #eff6ff;
 }
-.modal-status-banner.info:hover {
-  background: rgba(30, 58, 138, 0.65);
-}
 .modal-status-banner.warning {
-  background: rgba(113, 63, 18, 0.45);
-  border-left: 4px solid #eab308;
+  background: rgba(113, 63, 18, 0.3);
+  border-color: rgba(234, 179, 8, 0.3);
   color: #fefce8;
 }
-.modal-status-banner.warning:hover {
-  background: rgba(113, 63, 18, 0.65);
-}
 .modal-status-banner.error {
-  background: rgba(127, 29, 29, 0.45);
-  border-left: 4px solid #ef4444;
+  background: rgba(127, 29, 29, 0.3);
+  border-color: rgba(239, 68, 68, 0.3);
   color: #fef2f2;
 }
-.modal-status-banner.error:hover {
-  background: rgba(127, 29, 29, 0.65);
-}
-.modal-banner-icon { font-size: 18px; line-height: 1; flex-shrink: 0; }
+.modal-banner-icon { font-size: 16px; line-height: 1; flex-shrink: 0; }
 .modal-banner-text strong { display: block; margin-bottom: 2px; }
 
 .modal-info-box {
   background: var(--bg-input);
   border: 1px solid var(--border-color);
-  border-radius: 14px;
-  padding: 16px;
+  border-radius: 8px;
+  padding: 14px;
 }
 .modal-box-header {
   display: flex;
@@ -501,7 +568,7 @@ select.model-select optgroup {
   margin-bottom: 8px;
 }
 .modal-box-label {
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.8px;
   color: var(--text-muted);
@@ -509,43 +576,43 @@ select.model-select optgroup {
 .modal-model-title-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 6px;
 }
 .modal-model-name {
-  font-size: 16px;
-  font-weight: 800;
+  font-size: 15px;
+  font-weight: 700;
   color: var(--text-primary);
 }
 .modal-model-code {
   font-family: var(--font-mono);
-  font-size: 12px;
-  background: rgba(200, 141, 81, 0.15);
-  color: var(--accent-primary);
-  padding: 2px 8px;
-  border-radius: 6px;
+  font-size: 11.5px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 .modal-model-desc {
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--text-secondary);
-  line-height: 1.45;
-  margin-bottom: 12px;
+  line-height: 1.4;
+  margin-bottom: 10px;
 }
 .modal-model-meta-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 10px;
-  padding: 10px;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  padding: 8px 10px;
 }
 .meta-item { display: flex; flex-direction: column; gap: 2px; }
-.meta-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
-.meta-value { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+.meta-label { font-size: 9.5px; color: var(--text-muted); text-transform: uppercase; }
+.meta-value { font-size: 11.5px; font-weight: 600; color: var(--text-primary); }
 
 .modal-section-title {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.8px;
   color: var(--text-muted);
@@ -553,45 +620,49 @@ select.model-select optgroup {
 .modal-check-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 .check-item {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 12px 14px;
+  border-radius: 8px;
+  padding: 10px 12px;
+  transition: border-color 0.2s ease;
+}
+.check-item:hover {
+  border-color: var(--border-hover);
 }
 .check-icon {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 700;
   flex-shrink: 0;
 }
-.check-icon.success { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-.check-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
-.check-detail { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.check-icon.success { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+.check-title { font-size: 12.5px; font-weight: 600; color: var(--text-primary); }
+.check-detail { font-size: 11.5px; color: var(--text-secondary); margin-top: 2px; }
 
 .modal-footer {
-  padding: 18px 24px;
+  padding: 14px 20px;
   border-top: 1px solid var(--border-color);
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: rgba(255, 255, 255, 0.02);
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .spinner {
-  width: 18px;
-  height: 18px;
-  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: #ffffff;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -602,94 +673,79 @@ select.model-select optgroup {
   to { transform: rotate(360deg); }
 }
 
-/* Primary Action Button */
+/* shadcn Primary Action Button */
 .btn-primary {
   width: 100%;
-  height: 48px;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, #a86c38 100%);
-  color: #ffffff;
-  border: none;
+  height: 42px;
+  background: #fafafa;
+  color: #09090b;
+  border: 1px solid #fafafa;
   border-radius: var(--radius-input);
   font-family: var(--font-sans);
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13.5px;
+  font-weight: 600;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin-top: 28px;
-  transition: all 0.15s ease;
-  box-shadow: 0 4px 16px var(--accent-glow);
+  margin-top: 20px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent-primary) 100%);
-  box-shadow: 0 6px 20px rgba(200, 141, 81, 0.4);
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #09090b;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(255, 255, 255, 0.16);
 }
 
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: wait;
-  box-shadow: none;
+.btn-primary:hover .btn-svg-icon {
+  transform: scale(1.12) rotate(4deg);
 }
 
-/* Status Toast - Uiverse.io Alert Card Design */
+.btn-primary:active { transform: translateY(0) scale(0.98); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* Status Toast - shadcn toast design */
 .status-toast {
-  margin-top: 16px;
-  padding: 12px 14px;
-  border-radius: 10px;
-  font-size: 13px;
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
   display: none;
   align-items: center;
   gap: 10px;
-  line-height: 1.45;
-  transition: transform 0.3s ease-in-out, background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-  transform: scale(1);
+  line-height: 1.4;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.status-toast:hover {
-  transform: scale(1.02);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .status-toast.show { display: flex; }
-.status-toast.info {
-  background: rgba(30, 58, 138, 0.45);
-  border-left: 4px solid #3b82f6;
-  color: #eff6ff;
-}
-.status-toast.info:hover { background: rgba(30, 58, 138, 0.65); }
+.status-toast.info { border-color: rgba(59, 130, 246, 0.4); color: #eff6ff; background: rgba(30, 58, 138, 0.3); }
+.status-toast.success { border-color: rgba(34, 197, 94, 0.4); color: #f0fdf4; background: rgba(20, 83, 45, 0.3); }
+.status-toast.warning { border-color: rgba(234, 179, 8, 0.4); color: #fefce8; background: rgba(113, 63, 18, 0.3); }
+.status-toast.error { border-color: rgba(239, 68, 68, 0.4); color: #fef2f2; background: rgba(127, 29, 29, 0.3); }
 
-.status-toast.success {
-  background: rgba(20, 83, 45, 0.45);
-  border-left: 4px solid #22c55e;
-  color: #f0fdf4;
-}
-.status-toast.success:hover { background: rgba(20, 83, 45, 0.65); }
-
-.status-toast.warning {
-  background: rgba(113, 63, 18, 0.45);
-  border-left: 4px solid #eab308;
-  color: #fefce8;
-}
-.status-toast.warning:hover { background: rgba(113, 63, 18, 0.65); }
-
-.status-toast.error {
-  background: rgba(127, 29, 29, 0.45);
-  border-left: 4px solid #ef4444;
-  color: #fef2f2;
-}
-.status-toast.error:hover { background: rgba(127, 29, 29, 0.65); }
-
-/* Right Status Card */
+/* Right Status Card (shadcn design) */
 .status-panel {
   background: var(--bg-card);
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-card);
-  padding: 26px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   display: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .status-panel.show { display: block; }
@@ -697,12 +753,12 @@ select.model-select optgroup {
 .panel-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 14px;
   color: var(--status-green);
-  margin-bottom: 20px;
-  padding-bottom: 14px;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -711,17 +767,23 @@ select.model-select optgroup {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-input);
   padding: 12px 14px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.panel-item:hover {
+  border-color: var(--border-hover);
+  transform: translateX(2px);
 }
 
 .panel-item:last-child { margin-bottom: 0; }
 
 .panel-label {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10.5px;
+  font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
   margin-bottom: 4px;
 }
 
@@ -738,70 +800,172 @@ select.model-select optgroup {
 .btn-icon {
   background: transparent;
   border: none;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
-  transition: color 0.15s ease;
+  transition: color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.btn-icon:hover { color: var(--accent-primary); }
+.btn-icon:hover { color: var(--text-primary); background: var(--border-color); transform: scale(1.1); }
 
-/* Action Buttons Group */
+/* Live Health Ticker Widget */
+.live-health-widget {
+  background: linear-gradient(135deg, rgba(24, 24, 27, 0.9) 0%, rgba(39, 39, 42, 0.5) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.live-health-widget::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.08), transparent);
+  animation: shineScan 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes shineScan {
+  0% { left: -100%; }
+  45%, 100% { left: 200%; }
+}
+
+.live-tag {
+  font-size: 10px;
+  font-weight: 700;
+  color: #34d399;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(16, 185, 129, 0.12);
+  padding: 2px 6px;
+  border-radius: 10px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 6px #34d399;
+  animation: pulseDot 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes pulseDot {
+  0% { opacity: 0.4; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1.25); }
+}
+
+.health-metrics-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.health-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.metric-val {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.metric-lbl {
+  font-size: 9.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.equalizer-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2.5px;
+  height: 14px;
+}
+
+.eq-bar {
+  width: 3px;
+  background: #34d399;
+  border-radius: 2px;
+  animation: eqPulse 1.2s ease-in-out infinite alternate;
+}
+
+.eq-bar.bar-1 { height: 8px; animation-delay: 0.1s; }
+.eq-bar.bar-2 { height: 14px; animation-delay: 0.3s; }
+.eq-bar.bar-3 { height: 10px; animation-delay: 0.2s; }
+.eq-bar.bar-4 { height: 12px; animation-delay: 0.4s; }
+
+@keyframes eqPulse {
+  0% { height: 4px; opacity: 0.5; }
+  100% { height: 14px; opacity: 1; }
+}
+
+/* Action Buttons Group (shadcn buttons) */
 .actions-group {
-  margin-top: 24px;
+  margin-top: 20px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.btn-launch {
-  width: 100%;
-  height: 44px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: #ffffff;
-  border: none;
-  border-radius: var(--radius-input);
-  font-family: var(--font-sans);
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
-  transition: all 0.15s ease;
-}
-
-.btn-launch:hover {
-  opacity: 0.95;
-  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4);
-}
-
 .btn-secondary {
   width: 100%;
   height: 40px;
-  background: var(--bg-hover);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
+  background: #18181b;
+  color: #fafafa;
+  border: 1px solid #27272a;
   border-radius: var(--radius-input);
   font-family: var(--font-sans);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-secondary:hover {
-  background: var(--border-color);
-  border-color: var(--border-hover);
+  background: #27272a;
+  border-color: #3f3f46;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
-.btn-icon-img {
-  width: 22px;
-  height: 22px;
-  object-fit: contain;
-  vertical-align: middle;
+
+.btn-secondary:hover .btn-svg-icon {
+  transform: scale(1.1);
+}
+
+.btn-secondary:active { transform: translateY(0) scale(0.98); }
+
+.btn-svg-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.2s ease;
 }
 
 .skill-card {
@@ -810,7 +974,44 @@ select.model-select optgroup {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-card);
   padding: 24px;
-  box-shadow: var(--shadow-card);
+}
+.skill-header {
+  margin-bottom: 12px;
+}
+.skill-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.skill-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.skill-description {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+.skill-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+.skill-preview-box {
+  margin-top: 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
 }
 .skill-header {
   margin-bottom: 12px;
@@ -940,236 +1141,6 @@ select.model-select optgroup {
   color: inherit;
 }
 
-/* Quick AI Chatbot Card - Uiverse.io by Cobp (Kira AI Palette) */
-.quick-ai-card {
-  margin-top: 24px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-card);
-  padding: 20px;
-  box-shadow: var(--shadow-card);
-}
-
-.card-title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-
-.card-section-title {
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-  color: var(--text-muted);
-}
-
-.container_chat_bot {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-
-.container_chat_bot .container-chat-options {
-  position: relative;
-  display: flex;
-  background: linear-gradient(
-    135deg,
-    var(--accent-primary) 0%,
-    var(--border-hover) 35%,
-    var(--border-color) 70%,
-    var(--bg-input) 100%
-  );
-  border-radius: 16px;
-  padding: 1.5px;
-  overflow: hidden;
-}
-
-.container_chat_bot .container-chat-options::after {
-  position: absolute;
-  content: "";
-  top: -10px;
-  left: -10px;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(200, 141, 81, 0.7),
-    rgba(200, 141, 81, 0.25),
-    rgba(200, 141, 81, 0.08),
-    rgba(0, 0, 0, 0)
-  );
-  width: 35px;
-  height: 35px;
-  filter: blur(1px);
-  pointer-events: none;
-}
-
-.container_chat_bot .container-chat-options .chat {
-  display: flex;
-  flex-direction: column;
-  background-color: rgba(18, 14, 11, 0.95);
-  border-radius: 15px;
-  width: 100%;
-  overflow: hidden;
-}
-
-.container_chat_bot .container-chat-options .chat .chat-bot {
-  position: relative;
-  display: flex;
-}
-
-.container_chat_bot .chat .chat-bot textarea {
-  background-color: transparent;
-  border-radius: 16px;
-  border: none;
-  width: 100%;
-  height: 58px;
-  color: var(--text-primary);
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 400;
-  padding: 12px 14px;
-  resize: none;
-  outline: none;
-}
-
-.container_chat_bot .chat .chat-bot textarea::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-.container_chat_bot .chat .chat-bot textarea::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
-}
-.container_chat_bot .chat .chat-bot textarea::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-primary);
-}
-
-.container_chat_bot .chat .chat-bot textarea::placeholder {
-  color: var(--text-muted);
-  transition: all 0.3s ease;
-}
-
-.container_chat_bot .chat .chat-bot textarea:focus::placeholder {
-  color: transparent;
-}
-
-.container_chat_bot .chat .options {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  border-top: 1px solid rgba(53, 41, 32, 0.5);
-  background: rgba(18, 14, 11, 0.6);
-}
-
-.container_chat_bot .chat .options .btns-add {
-  display: flex;
-  gap: 8px;
-}
-
-.container_chat_bot .chat .options .btns-add button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-}
-
-.container_chat_bot .chat .options .btns-add button:hover {
-  transform: translateY(-3px);
-  color: var(--accent-primary);
-}
-
-.container_chat_bot .chat .options .btn-submit {
-  display: flex;
-  padding: 2px;
-  background-image: linear-gradient(to top, #352920, var(--accent-primary), #352920);
-  border-radius: 10px;
-  box-shadow: inset 0 6px 2px -4px rgba(255, 255, 255, 0.3);
-  cursor: pointer;
-  border: none;
-  outline: none;
-  transition: all 0.15s ease;
-}
-
-.container_chat_bot .chat .options .btn-submit i {
-  width: 32px;
-  height: 32px;
-  padding: 6px;
-  background: rgba(18, 14, 11, 0.85);
-  border-radius: 9px;
-  backdrop-filter: blur(3px);
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.container_chat_bot .chat .options .btn-submit svg {
-  width: 18px;
-  height: 18px;
-  transition: all 0.3s ease;
-}
-
-.container_chat_bot .chat .options .btn-submit:hover svg {
-  color: var(--accent-primary);
-  filter: drop-shadow(0 0 6px var(--accent-primary));
-}
-
-.container_chat_bot .chat .options .btn-submit:focus svg,
-.container_chat_bot .chat .options .btn-submit.active svg {
-  color: var(--accent-primary);
-  filter: drop-shadow(0 0 8px var(--accent-primary));
-  transform: scale(1.15) rotate(45deg) translateX(-1px) translateY(1px);
-}
-
-.container_chat_bot .chat .options .btn-submit:active {
-  transform: scale(0.92);
-}
-
-.container_chat_bot .tags {
-  padding: 12px 0 0 0;
-  display: flex;
-  color: var(--text-primary);
-  font-size: 11.5px;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.container_chat_bot .tags span {
-  padding: 4px 10px;
-  background-color: var(--bg-input);
-  border: 1.5px solid var(--border-color);
-  border-radius: 8px;
-  cursor: pointer;
-  user-select: none;
-  color: var(--text-secondary);
-  transition: all 0.2s ease;
-}
-
-.container_chat_bot .tags span:hover {
-  border-color: var(--accent-primary);
-  color: var(--text-primary);
-  background: var(--bg-hover);
-  transform: translateY(-1px);
-}
-
-.ai-chat-response {
-  margin-top: 14px;
-  background: var(--bg-input);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 14px;
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--text-primary);
-  overflow-x: auto;
-}
 </style>
 </head>
 <body>
@@ -1247,35 +1218,63 @@ select.model-select optgroup {
           <div class="inspector-badge-group">
             <span id="mBadge" class="badge-tag tag-free">Free Model</span>
             <span id="mLimits" class="inspector-limits">150M tokens/day · 1M context</span>
-            <button type="button" id="btnTestModel" class="btn-secondary" style="width: auto; height: 28px; padding: 0 10px; font-size: 11.5px; margin-top: 6px;">🧪 Test Model</button>
+            <button type="button" id="btnTestModel" class="btn-secondary" style="width: auto; height: 28px; padding: 0 10px; font-size: 11.5px; margin-top: 6px;"><svg class="btn-svg-icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>Test Model</span></button>
           </div>
         </div>
       </div>
 
       <button id="start" type="button" class="btn-primary">
-        <span>⚡ Test & Auto-Configure All AI Tools</span>
+        <svg class="btn-svg-icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span>Configure Gateway & AI Models</span>
       </button>
       <div style="font-size: 11.5px; color: var(--text-muted); text-align: center; margin-top: 6px;">
-        Automatically configures Codex, ChatGPT Desktop & Claude Code CLI.
+        Automatically configures local OpenAI-compatible proxy endpoint.
       </div>
 
       <div id="status" class="status-toast"></div>
     </div>
 
-    <!-- Right Status Panel -->
+    <!-- Right Status Panel (shadcn Card) -->
     <div id="statusPanel" class="status-panel">
       <div class="panel-header">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
         KiraAI Route Gateway Active
       </div>
 
       <div id="setupSuccessBanner" role="alert" class="modal-status-banner success" style="margin-bottom: 16px;">
-        <svg stroke="currentColor" viewBox="0 0 24 24" fill="none" style="width:20px; height:20px; flex-shrink:0; margin-top:2px; color:#4ade80;" xmlns="http://www.w3.org/2000/svg">
+        <svg stroke="currentColor" viewBox="0 0 24 24" fill="none" style="width:18px; height:18px; flex-shrink:0; margin-top:2px; color:#4ade80;" xmlns="http://www.w3.org/2000/svg">
           <path d="M13 16h-1v-4h1m0-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>
         </svg>
         <div>
-          <strong style="display: block; font-size: 13.5px; margin-bottom: 2px;">Codex Configured Successfully!</strong>
-          <span style="font-size: 12px; opacity: 0.9;">Your <code style="background: rgba(0,0,0,0.4); padding: 1px 5px; border-radius: 4px; color: #6ee7b7;">~/.codex/config.toml</code> and environment variables are active. You may now launch and test!</span>
+          <strong style="display: block; font-size: 13px; margin-bottom: 2px;">Gateway Configured Successfully</strong>
+          <span style="font-size: 12px; opacity: 0.9;">Your local OpenAI-compatible endpoint is active and ready to accept requests.</span>
+        </div>
+      </div>
+
+      <!-- Live Health & Latency Bar (Real-Time Dynamic Ping Widget) -->
+      <div class="panel-item live-health-widget">
+        <div class="panel-label" style="display: flex; justify-content: space-between; align-items: center;">
+          <span>Gateway Route Health</span>
+          <span class="live-tag"><span class="live-dot"></span> LIVE <span id="liveLatencyVal">--ms</span></span>
+        </div>
+        <div class="health-metrics-row">
+          <div class="health-metric">
+            <span id="liveUptimeVal" class="metric-val">99.9%</span>
+            <span class="metric-lbl">Uptime</span>
+          </div>
+          <div class="health-metric">
+            <span class="metric-val">HTTP/2</span>
+            <span class="metric-lbl">Protocol</span>
+          </div>
+          <div class="health-metric">
+            <div class="equalizer-bars">
+              <span class="eq-bar bar-1"></span>
+              <span class="eq-bar bar-2"></span>
+              <span class="eq-bar bar-3"></span>
+              <span class="eq-bar bar-4"></span>
+            </div>
+            <span id="liveSignalText" class="metric-lbl" style="transition: color 0.3s ease;">Optimal</span>
+          </div>
         </div>
       </div>
 
@@ -1291,126 +1290,51 @@ select.model-select optgroup {
         <div class="panel-value-row">
           <span id="stEndpoint">http://127.0.0.1:4010/v1</span>
           <button id="btnCopyEndpoint" type="button" class="btn-icon" title="Copy Endpoint">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
           </button>
         </div>
       </div>
 
-      <div class="panel-item">
-        <div class="panel-label">Codex & ChatGPT Desktop</div>
-        <div class="panel-value-row">
-          <span>Auto-configured in ~/.codex</span>
-          <span style="color: var(--status-green); font-size:18px;">●</span>
-        </div>
-      </div>
-
-      <div class="panel-item">
-        <div class="panel-label">Claude Code CLI</div>
-        <div class="panel-value-row">
-          <span>Auto-configured in Env</span>
-          <span style="color: var(--status-green); font-size:18px;">●</span>
-        </div>
-      </div>
-
       <div class="actions-group">
-        <button id="btnLaunchCodex" type="button" class="btn-launch">
-          <img src="/codex-logo.webp" class="btn-icon-img" alt="Codex Logo" onerror="this.style.display='none'">
-          <span>Launch Codex</span>
-        </button>
-        <button id="btnLaunchClaude" type="button" class="btn-launch" style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%); box-shadow: 0 4px 14px rgba(217, 119, 6, 0.3);">
-          <span>⚡ Launch Claude Code</span>
-        </button>
-        <button id="btnSyncTools" type="button" class="btn-secondary">
-          <span>🔄 Auto-Sync Codex & Claude</span>
-        </button>
         <button id="btnCopyEndpoint2" type="button" class="btn-secondary">
-          <span>📋 Copy API Endpoint</span>
+          <svg class="btn-svg-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span>Copy API Endpoint</span>
         </button>
         <button id="btnResetConfig" type="button" class="btn-secondary">
-          <span>🔄 Reconfigure</span>
+          <svg class="btn-svg-icon" viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          <span>Reconfigure Gateway</span>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Standalone Quick AI Chatbot Playground (Uiverse.io Design) -->
-  <div id="playgroundSection" class="quick-ai-card">
-    <div class="card-title-row">
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 18px;">🎮</span>
-        <span class="card-section-title" style="font-size: 13px;">STANDALONE AI PLAYGROUND</span>
-      </div>
-      <span class="badge-tag tag-free">Live Model Query</span>
-    </div>
-    <div class="container_chat_bot">
-      <div class="container-chat-options">
-        <div class="chat">
-          <div class="chat-bot">
-            <textarea
-              id="chat_bot_input"
-              name="chat_bot"
-              placeholder="Imagine Something...✦˚ (e.g. Write a python web scraper)"
-            ></textarea>
-          </div>
-          <div class="options">
-            <div class="btns-add">
-              <button id="btnAttachPrompt" type="button" title="Attach Code Snippet">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-                  <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8v8a5 5 0 1 0 10 0V6.5a3.5 3.5 0 1 0-7 0V15a2 2 0 0 0 4 0V8"></path>
-                </svg>
-              </button>
-              <button id="btnSystemPrompt" type="button" title="Add System Rule">
-                <svg viewBox="0 0 24 24" height="20" width="20" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zm0 10a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zm10 0a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1zm0-8h6m-3-3v6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke="currentColor" fill="none"></path>
-                </svg>
-              </button>
-              <button id="btnModelParams" type="button" title="Model Parameters">
-                <svg viewBox="0 0 24 24" height="20" width="20" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10s-4.477 10-10 10m-2.29-2.333A17.9 17.9 0 0 1 8.027 13H4.062a8.01 8.01 0 0 0 5.648 6.667M10.03 13c.151 2.439.848 4.73 1.97 6.752A15.9 15.9 0 0 0 13.97 13zm9.908 0h-3.965a17.9 17.9 0 0 1-1.683 6.667A8.01 8.01 0 0 0 19.938 13M4.062 11h3.965A17.9 17.9 0 0 1 9.71 4.333A8.01 8.01 0 0 0 4.062 11m5.969 0h3.938A15.9 15.9 0 0 0 12 4.248A15.9 15.9 0 0 0 10.03 11m4.259-6.667A17.9 17.9 0 0 1 15.973 11h3.965a8.01 8.01 0 0 0-5.648-6.667" fill="currentColor"></path>
-                </svg>
-              </button>
-            </div>
-            <button id="btnSubmitAiChat" class="btn-submit" type="button" title="Send Prompt to Kira AI">
-              <i>
-                <svg viewBox="0 0 512 512">
-                  <path fill="currentColor" d="M473 39.05a24 24 0 0 0-25.5-5.46L47.47 185h-.08a24 24 0 0 0 1 45.16l.41.13l137.3 58.63a16 16 0 0 0 15.54-3.59L422 80a7.07 7.07 0 0 1 10 10L226.66 310.26a16 16 0 0 0-3.59 15.54l58.65 137.38c.06.2.12.38.19.57c3.2 9.27 11.3 15.81 21.09 16.25h1a24.63 24.63 0 0 0 23-15.46L478.39 64.62A24 24 0 0 0 473 39.05"></path>
-                </svg>
-              </i>
-            </button>
-          </div>
-        </div>
-      </div>
-      <div class="tags">
-        <span id="tagPython">🐍 Python Script</span>
-        <span id="tagGateway">⚡ Gateway Route</span>
-        <span id="tagTsApi">💻 TS API</span>
-      </div>
-    </div>
-    <div id="aiChatResponse" class="ai-chat-response" style="display: none;"></div>
-  </div>
+
 
   <!-- AI Assistant Integration Skill Section -->
   <div class="skill-card">
     <div class="skill-header">
       <div class="skill-title-group">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
         <span class="skill-title">AI Assistant Integration Skill (SKILL.md)</span>
         <span class="badge-tag tag-free">Preconfigured Context</span>
       </div>
       <p class="skill-description">
-        Provide preconfigured context for your AI coding assistants (<strong>Cursor, Codex, Cline, Roo Code, Claude Code, Antigravity</strong>) to accurately understand Kira AI API structures, supported models, and generate precise integration code for NodeJS, PHP, Python, and WordPress.
+        Provide preconfigured context for your AI coding assistants to accurately understand Kira AI API structures, supported models, and generate precise integration code for NodeJS, PHP, Python, and WordPress.
       </p>
     </div>
 
     <div class="skill-actions-row">
-      <button id="btnCopySkill" type="button" class="btn-secondary" style="width: auto; padding: 0 16px;">
-        <span>📋 Copy SKILL.md</span>
+      <button id="btnCopySkill" type="button" class="btn-secondary" style="width: auto; padding: 0 14px;">
+        <svg class="btn-svg-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>Copy SKILL.md</span>
       </button>
-      <a href="/api/skill/download" download="SKILL.md" class="btn-secondary" style="width: auto; padding: 0 16px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
-        <span>📥 Download SKILL.md</span>
+      <a href="/api/skill/download" download="SKILL.md" class="btn-secondary" style="width: auto; padding: 0 14px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+        <svg class="btn-svg-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Download SKILL.md</span>
       </a>
-      <button id="btnToggleSkill" type="button" class="btn-secondary" style="width: auto; padding: 0 16px;">
-        <span>👁️ <span id="skillPreviewToggleText">View Skill Context</span></span>
+      <button id="btnToggleSkill" type="button" class="btn-secondary" style="width: auto; padding: 0 14px;">
+        <svg class="btn-svg-icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span id="skillPreviewToggleText">View Skill Context</span>
       </button>
     </div>
 
@@ -1426,7 +1350,7 @@ select.model-select optgroup {
         <div id="modalStatusDot" class="status-indicator-dot"></div>
         <div>
           <h2 class="modal-title">Model Configuration & Status</h2>
-          <p id="modalSubtitle" class="modal-subtitle">Auto-configured for Codex & Claude Code</p>
+          <p id="modalSubtitle" class="modal-subtitle">Auto-configured local gateway endpoint</p>
         </div>
       </div>
       <button id="btnCloseModal" type="button" class="modal-close-btn" aria-label="Close modal">&times;</button>
@@ -1435,7 +1359,9 @@ select.model-select optgroup {
     <div class="modal-body">
       <!-- Status Banner -->
       <div id="modalBanner" class="modal-status-banner success">
-        <span id="modalBannerIcon" class="modal-banner-icon">✅</span>
+        <span id="modalBannerIcon" class="modal-banner-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        </span>
         <div id="modalBannerText" class="modal-banner-text">Connected to Kira AI upstream servers!</div>
       </div>
 
@@ -1467,26 +1393,14 @@ select.model-select optgroup {
       </div>
 
       <!-- Auto-Configured Tools Checklist -->
-      <div class="modal-section-title">AUTO-CONFIGURED TOOLS & PROXIES</div>
+      <div class="modal-section-title">LOCAL ENDPOINT STATUS</div>
       <div class="modal-check-list">
         <div class="check-item">
-          <div class="check-icon success">✓</div>
-          <div class="check-content">
-            <div class="check-title">Codex & ChatGPT Desktop</div>
-            <div class="check-detail">Updated <code id="modalCodexPath">~/.codex/config.toml</code> (<span style="color:#c88d51">wire_api = "responses"</span>)</div>
+          <div class="check-icon success">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
           </div>
-        </div>
-        <div class="check-item">
-          <div class="check-icon success">✓</div>
           <div class="check-content">
-            <div class="check-title">Claude Code CLI</div>
-            <div class="check-detail">Environment variables set: <code>ANTHROPIC_BASE_URL</code> & key</div>
-          </div>
-        </div>
-        <div class="check-item">
-          <div class="check-icon success">✓</div>
-          <div class="check-content">
-            <div class="check-title">Local Proxy Endpoint</div>
+            <div class="check-title">Local OpenAI-Compatible Proxy</div>
             <div class="check-detail"><code id="modalEndpointUrl">http://127.0.0.1:4010/v1</code></div>
           </div>
         </div>
@@ -1494,12 +1408,9 @@ select.model-select optgroup {
     </div>
 
     <div class="modal-footer">
-      <button id="modalBtnLaunchCodex" type="button" class="btn-launch" style="flex: 1;">
-        <img src="/codex-logo.webp" class="btn-icon-img" alt="Codex Logo" onerror="this.style.display='none'">
-        <span>Launch Codex</span>
-      </button>
-      <button id="modalBtnLaunchClaude" type="button" class="btn-launch" style="flex: 1; background: linear-gradient(135deg, #d97706 0%, #b45309 100%);">
-        <span>⚡ Launch Claude</span>
+      <button id="modalBtnCopy" type="button" class="btn-primary" style="flex: 1; margin-top: 0;">
+        <svg class="btn-svg-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>Copy API Endpoint</span>
       </button>
       <button id="modalBtnClose" type="button" class="btn-secondary" style="width: auto; padding: 0 18px;">
         <span>Close</span>
@@ -1555,7 +1466,7 @@ select.model-select optgroup {
 
     statusToast.className = "status-toast show " + t;
     statusToast.setAttribute("role", "alert");
-    statusToast.innerHTML = '<svg stroke="currentColor" viewBox="0 0 24 24" fill="none" style="width:20px; height:20px; flex-shrink:0; color:' + iconColor + ';" xmlns="http://www.w3.org/2000/svg"><path d="M13 16h-1v-4h1m0-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg><span style="font-size:12.5px; font-weight:600;">' + message + '</span>';
+    statusToast.innerHTML = '<svg stroke="currentColor" viewBox="0 0 24 24" fill="none" style="width:16px; height:16px; flex-shrink:0; color:' + iconColor + ';" xmlns="http://www.w3.org/2000/svg"><path d="M13 16h-1v-4h1m0-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg><span style="font-size:12.5px; font-weight:500;">' + message + '</span>';
   }
 
   function updateModelInspector() {
@@ -1647,30 +1558,27 @@ select.model-select optgroup {
     if (data.connected) {
       if (modalStatusDot) modalStatusDot.className = "status-indicator-dot";
       if (modalBanner) modalBanner.className = "modal-status-banner success";
-      if (modalBannerIcon) modalBannerIcon.textContent = "✅";
-      if (modalBannerText) modalBannerText.innerHTML = "<strong>Upstream Connection Verified Active!</strong> Model <code>" + selectedId + "</code> responds smoothly from kiraai.vn. All AI tools auto-configured and ready.";
+      if (modalBannerIcon) modalBannerIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+      if (modalBannerText) modalBannerText.innerHTML = "<strong>Upstream Connection Verified Active!</strong> Model <code>" + selectedId + "</code> responds smoothly from kiraai.vn. Local gateway proxy ready.";
     } else if (data.connectionWarning) {
       const isKeyEmpty = !data.hasApiKey && apiKeyInput && apiKeyInput.value.trim() === "";
       if (isKeyEmpty) {
         if (modalStatusDot) modalStatusDot.className = "status-indicator-dot warning";
         if (modalBanner) modalBanner.className = "modal-status-banner warning";
-        if (modalBannerIcon) modalBannerIcon.textContent = "⚠️";
-        if (modalBannerText) modalBannerText.innerHTML = "<strong>Codex Auto-Configured! API Key Needed for Live Queries</strong><br>Your <code>~/.codex/config.toml</code> has been auto-configured for <code>" + selectedId + "</code>. Paste your API key from <a href='https://kiraai.vn/developer' target='_blank' style='color:#fbbf24; font-weight:700;'>kiraai.vn/developer</a> into the key box to test live model queries.";
+        if (modalBannerIcon) modalBannerIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+        if (modalBannerText) modalBannerText.innerHTML = "<strong>Gateway Configured! API Key Needed for Live Queries</strong><br>Paste your API key from <a href='https://kiraai.vn/developer' target='_blank' style='color:#fbbf24; font-weight:700;'>kiraai.vn/developer</a> into the key box to test live model queries.";
       } else {
         if (modalStatusDot) modalStatusDot.className = "status-indicator-dot error";
         if (modalBanner) modalBanner.className = "modal-status-banner error";
-        if (modalBannerIcon) modalBannerIcon.textContent = "❌";
-        if (modalBannerText) modalBannerText.innerHTML = "<strong>Codex Configured — Upstream Connection Warning</strong><br>" + data.connectionWarning;
+        if (modalBannerIcon) modalBannerIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+        if (modalBannerText) modalBannerText.innerHTML = "<strong>Gateway Configured — Upstream Connection Warning</strong><br>" + data.connectionWarning;
       }
     } else {
       if (modalStatusDot) modalStatusDot.className = "status-indicator-dot warning";
       if (modalBanner) modalBanner.className = "modal-status-banner warning";
-      if (modalBannerIcon) modalBannerIcon.textContent = "ℹ️";
-      if (modalBannerText) modalBannerText.innerHTML = "<strong>Model Configured in ~/.codex/config.toml</strong>";
+      if (modalBannerIcon) modalBannerIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+      if (modalBannerText) modalBannerText.innerHTML = "<strong>Model Configured for Local Proxy Endpoint</strong>";
     }
-
-    const codexPathEl = document.getElementById("modalCodexPath");
-    if (codexPathEl && data.codexPath) codexPathEl.textContent = data.codexPath;
 
     const endpointEl = document.getElementById("modalEndpointUrl");
     if (endpointEl) endpointEl.textContent = window.location.origin + "/v1";
@@ -1682,12 +1590,40 @@ select.model-select optgroup {
     if (modalOverlay) modalOverlay.classList.remove("active");
   }
 
+  const STORAGE_KEY_API_KEY = "kira_route_saved_api_key";
+  const STORAGE_KEY_MODEL = "kira_route_saved_model";
+
+  function getSavedApiKey() {
+    try { return localStorage.getItem(STORAGE_KEY_API_KEY) || ""; } catch { return ""; }
+  }
+
+  function getSavedModel() {
+    try { return localStorage.getItem(STORAGE_KEY_MODEL) || ""; } catch { return ""; }
+  }
+
+  function saveApiKeyLocally(key, model) {
+    try {
+      if (key) localStorage.setItem(STORAGE_KEY_API_KEY, key);
+      if (model) localStorage.setItem(STORAGE_KEY_MODEL, model);
+    } catch {}
+  }
+
+  function clearSavedApiKeyLocally() {
+    try {
+      localStorage.removeItem(STORAGE_KEY_API_KEY);
+      localStorage.removeItem(STORAGE_KEY_MODEL);
+    } catch {}
+  }
+
   async function syncModelSelection() {
     updateModelInspector();
     if (!modelSelect || !apiKeyInput) return;
     const apiKey = apiKeyInput.value.trim();
     const model = modelSelect.value;
-    showStatus("Syncing model setting to Codex...", "info");
+
+    if (apiKey) saveApiKeyLocally(apiKey, model);
+
+    showStatus("Syncing model setting...", "info");
     try {
       const res = await fetch("/api/setup", {
         method: "POST",
@@ -1696,7 +1632,7 @@ select.model-select optgroup {
       });
       const data = await res.json();
       if (res.ok) {
-        showStatus("✓ Model updated to " + model + ". Codex config.toml auto-configured.", "success");
+        showStatus("Model updated to " + model + ". Local gateway ready.", "success");
         showStatusPanel(model, false);
       } else {
         showStatus(data?.error?.message || "Failed to update model.", "error");
@@ -1718,20 +1654,30 @@ select.model-select optgroup {
         body: JSON.stringify({ apiKey, model })
       });
       const setupData = await setupRes.json();
+      if (setupRes.ok && apiKey) {
+        saveApiKeyLocally(apiKey, model);
+      }
       showConfigModal(setupData);
     } catch {
       showStatus("Could not reach gateway server.", "error");
     }
   }
 
-  async function startAll() {
+  async function startAll(isAutoStart) {
     if (!startButton || !modelSelect || !apiKeyInput) return;
     const apiKey = apiKeyInput.value.trim();
     const model = modelSelect.value;
 
+    if (!apiKey) {
+      showStatus("Please paste a valid Kira API key to configure gateway.", "warning");
+      return;
+    }
+
     startButton.disabled = true;
     startButton.innerHTML = '<span class="spinner"></span> <span>Testing & Auto-Configuring...</span>';
-    showStatus("⚡ Auto-configuring Codex & testing Kira API connection...", "info");
+    if (!isAutoStart) {
+      showStatus("Auto-configuring environment & testing Kira API connection...", "info");
+    }
 
     try {
       const setupRes = await fetch("/api/setup", {
@@ -1742,16 +1688,23 @@ select.model-select optgroup {
       const setupData = await setupRes.json();
       if (!setupRes.ok) throw new Error(setupData?.error?.message || "Setup failed.");
 
+      // Save key locally ONLY AFTER validation/success confirms key is usable
+      saveApiKeyLocally(apiKey, model);
+
       updateModelInspector();
-      showStatusPanel(model, true);
-      showConfigModal(setupData);
+      showStatusPanel(model, !isAutoStart);
+
+      // Show popup modal when explicitly triggered by user click, NOT during background auto-start
+      if (!isAutoStart) {
+        showConfigModal(setupData);
+      }
 
       if (setupData.connected) {
-        showStatus("✓ Connected to Kira AI! Codex (~/.codex/config.toml) & Claude Code CLI ready for " + model + ".", "success");
+        showStatus("Connected to Kira AI! Local gateway ready for " + model + ".", "success");
       } else if (setupData.connectionWarning) {
-        showStatus("✓ Codex configured in ~/.codex/config.toml for " + model + ". (" + setupData.connectionWarning + ")", "info");
+        showStatus("Gateway configured for " + model + ". (" + setupData.connectionWarning + ")", "info");
       } else {
-        showStatus("✓ Codex & Claude Code auto-configured for " + model + ".", "success");
+        showStatus("Local gateway auto-configured for " + model + ".", "success");
       }
     } catch (error) {
       let msg = error instanceof Error ? error.message : "Something went wrong.";
@@ -1761,37 +1714,7 @@ select.model-select optgroup {
       showStatus(msg, "error");
     } finally {
       startButton.disabled = false;
-      startButton.innerHTML = '<span>⚡ Test & Auto-Configure All AI Tools</span>';
-    }
-  }
-
-  async function launchCodex() {
-    try { navigator.clipboard.writeText("codex"); } catch {}
-    showStatus("Launching Codex app or terminal...", "info");
-    try {
-      const res = await fetch("/api/launch-codex", { method: "POST" });
-      if (res.ok) {
-        showStatus("✓ Launching Codex.", "success");
-      } else {
-        showStatus("Copied 'codex' command to clipboard. Paste in terminal to run.", "info");
-      }
-    } catch {
-      showStatus("Copied 'codex' command to clipboard. Paste in terminal to run.", "info");
-    }
-  }
-
-  async function launchClaude() {
-    try { navigator.clipboard.writeText("claude"); } catch {}
-    showStatus("Launching Claude Code app or terminal...", "info");
-    try {
-      const res = await fetch("/api/launch-claude", { method: "POST" });
-      if (res.ok) {
-        showStatus("✓ Launching Claude Code.", "success");
-      } else {
-        showStatus("Copied 'claude' command to clipboard. Paste in terminal to run.", "info");
-      }
-    } catch {
-      showStatus("Copied 'claude' command to clipboard. Paste in terminal to run.", "info");
+      startButton.innerHTML = '<svg class="btn-svg-icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span>Configure Gateway & AI Models</span>';
     }
   }
 
@@ -1801,24 +1724,12 @@ select.model-select optgroup {
     showStatus("API Endpoint copied to clipboard.", "success");
   }
 
-  async function syncTools() {
-    showStatus("Auto-syncing Codex, ChatGPT Desktop and Claude Code...", "info");
-    try {
-      const res = await fetch("/api/sync-tools", { method: "POST" });
-      const data = await res.json();
-      if (res.ok) {
-        showStatus("✓ Codex config.toml & Claude environment synced successfully.", "success");
-      } else {
-        showStatus(data?.error?.message || "Sync failed.", "error");
-      }
-    } catch {
-      showStatus("Sync failed. Local gateway may be unreachable.", "error");
-    }
-  }
-
   function resetConfig() {
+    clearSavedApiKeyLocally();
+    if (apiKeyInput) apiKeyInput.value = "";
     if (statusPanel) statusPanel.className = "status-panel";
     if (statusToast) statusToast.className = "status-toast";
+    showStatus("Saved API Key and configuration cleared from local storage.", "info");
   }
 
   async function copySkillContent() {
@@ -1828,7 +1739,7 @@ select.model-select optgroup {
       const data = await res.json();
       if (data.content) {
         try { await navigator.clipboard.writeText(data.content); } catch {}
-        showStatus("✓ SKILL.md copied to clipboard! Paste into your project rules or AI context.", "success");
+        showStatus("SKILL.md copied to clipboard! Paste into your project rules or AI context.", "success");
       } else {
         showStatus(data?.error?.message || "SKILL.md file not found.", "error");
       }
@@ -1911,10 +1822,10 @@ select.model-select optgroup {
       html = italicHtml;
     }
 
-    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    html = html.replace(/\\\[([^\\\]]+)\\\]\\\(([^)]+)\\\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
 
-    html = html.replace(/^\s*[-*]\s+(.*$)/gm, "<li>$1</li>");
-    html = html.replace(/(<li>[\s\S]*?<\/li>)/g, "<ul>$1</ul>");
+    html = html.replace(/^\\s*[-*]\\s+(.*$)/gm, "<li>$1</li>");
+    html = html.replace(/(<li>[\\s\\S]*?<\\/li>)/g, "<ul>$1</ul>");
 
     return html;
   }
@@ -1939,7 +1850,7 @@ select.model-select optgroup {
     }
 
     if (btnTestModel) btnTestModel.addEventListener("click", testCurrentModel);
-    if (startButton) startButton.addEventListener("click", startAll);
+    if (startButton) startButton.addEventListener("click", function() { startAll(false); });
 
     const btnCloseModal = document.getElementById("btnCloseModal");
     if (btnCloseModal) btnCloseModal.addEventListener("click", hideConfigModal);
@@ -1947,11 +1858,8 @@ select.model-select optgroup {
     const modalBtnClose = document.getElementById("modalBtnClose");
     if (modalBtnClose) modalBtnClose.addEventListener("click", hideConfigModal);
 
-    const modalBtnLaunchCodex = document.getElementById("modalBtnLaunchCodex");
-    if (modalBtnLaunchCodex) modalBtnLaunchCodex.addEventListener("click", function() { launchCodex(); hideConfigModal(); });
-
-    const modalBtnLaunchClaude = document.getElementById("modalBtnLaunchClaude");
-    if (modalBtnLaunchClaude) modalBtnLaunchClaude.addEventListener("click", function() { launchClaude(); hideConfigModal(); });
+    const modalBtnCopy = document.getElementById("modalBtnCopy");
+    if (modalBtnCopy) modalBtnCopy.addEventListener("click", function() { copyEndpoint(); hideConfigModal(); });
 
     if (modalOverlay) {
       modalOverlay.addEventListener("click", function(e) {
@@ -1959,20 +1867,11 @@ select.model-select optgroup {
       });
     }
 
-    const btnLaunchCodex = document.getElementById("btnLaunchCodex");
-    if (btnLaunchCodex) btnLaunchCodex.addEventListener("click", launchCodex);
-
-    const btnLaunchClaude = document.getElementById("btnLaunchClaude");
-    if (btnLaunchClaude) btnLaunchClaude.addEventListener("click", launchClaude);
-
     const btnCopyEndpoint = document.getElementById("btnCopyEndpoint");
     if (btnCopyEndpoint) btnCopyEndpoint.addEventListener("click", copyEndpoint);
 
     const btnCopyEndpoint2 = document.getElementById("btnCopyEndpoint2");
     if (btnCopyEndpoint2) btnCopyEndpoint2.addEventListener("click", copyEndpoint);
-
-    const btnSyncTools = document.getElementById("btnSyncTools");
-    if (btnSyncTools) btnSyncTools.addEventListener("click", syncTools);
 
     const btnResetConfig = document.getElementById("btnResetConfig");
     if (btnResetConfig) btnResetConfig.addEventListener("click", resetConfig);
@@ -1982,85 +1881,88 @@ select.model-select optgroup {
 
     const btnToggleSkill = document.getElementById("btnToggleSkill");
     if (btnToggleSkill) btnToggleSkill.addEventListener("click", toggleSkillPreview);
-
-    const btnSubmitAiChat = document.getElementById("btnSubmitAiChat");
-    if (btnSubmitAiChat) btnSubmitAiChat.addEventListener("click", function() { sendAiPlaygroundPrompt(); });
-
-    const tagPython = document.getElementById("tagPython");
-    if (tagPython) tagPython.addEventListener("click", function() { sendAiPlaygroundPrompt("Write a fast Python script to calculate Fibonacci numbers."); });
-
-    const tagGateway = document.getElementById("tagGateway");
-    if (tagGateway) tagGateway.addEventListener("click", function() { sendAiPlaygroundPrompt("Explain how KiraAI Route proxy forwards requests to DeepSeek."); });
-
-    const tagTsApi = document.getElementById("tagTsApi");
-    if (tagTsApi) tagTsApi.addEventListener("click", function() { sendAiPlaygroundPrompt("Create a clean Fastify REST API endpoint in TypeScript."); });
   }
 
-  async function sendAiPlaygroundPrompt(promptText) {
-    const inputEl = document.getElementById("chat_bot_input");
-    const responseEl = document.getElementById("aiChatResponse");
-    const btnSubmit = document.getElementById("btnSubmitAiChat");
-    const text = promptText || (inputEl ? inputEl.value.trim() : "");
-
-    if (!text) {
-      showStatus("Please enter a prompt in the AI Playground.", "warning");
-      return;
-    }
-
-    if (inputEl) inputEl.value = text;
-    if (btnSubmit) btnSubmit.classList.add("active");
-    if (responseEl) {
-      responseEl.style.display = "block";
-      responseEl.innerHTML = '<span class="spinner" style="display:inline-block; margin-right:8px;"></span> <span>Sending query via local gateway proxy...</span>';
-    }
-
-    const selectedModel = modelSelect ? modelSelect.value : "kira-mini-1.0";
-    const userApiKey = apiKeyInput ? apiKeyInput.value.trim() : "";
-
-    try {
-      const res = await fetch("/api/playground", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: text,
-          model: selectedModel,
-          apiKey: userApiKey
-        })
-      });
-
-      const data = await res.json();
-      if (res.ok && data.success && data.text) {
-        if (responseEl) responseEl.innerHTML = parseMarkdown(data.text);
-        showStatus("✓ Received response from " + (data.model || selectedModel) + "!", "success");
-      } else {
-        const errMsg = data?.error?.message || "Model query failed. Ensure valid Kira API key.";
-        if (responseEl) responseEl.innerHTML = '<span style="color:#f87171;">⚠️ ' + errMsg + '</span>';
-        showStatus(errMsg, "error");
-      }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Connection failed.";
-      if (responseEl) responseEl.innerHTML = '<span style="color:#f87171;">⚠️ ' + msg + '</span>';
-      showStatus("Failed to send query to local proxy server.", "error");
-    } finally {
-      if (btnSubmit) setTimeout(function() { btnSubmit.classList.remove("active"); }, 400);
-    }
-  }
+  var isAutoStarting = false;
 
   async function loadInitialStatus() {
+    if (isAutoStarting) return;
+    isAutoStarting = true;
+
+    let savedKey = getSavedApiKey();
+    let savedModel = getSavedModel();
+
     try {
       const res = await fetch("/api/status");
       const data = await res.json();
-      if (data.configured) {
-        if (data.apiKey && apiKeyInput) apiKeyInput.value = data.apiKey;
-        if (data.model && modelSelect) modelSelect.value = data.model;
+
+      if (!savedKey && data.configured && data.apiKey) {
+        savedKey = data.apiKey;
+      }
+      if (!savedModel && data.model) {
+        savedModel = data.model;
+      }
+
+      if (savedModel && modelSelect) {
+        modelSelect.value = savedModel;
+      } else if (data.model && modelSelect) {
+        modelSelect.value = data.model;
+      }
+
+      if (savedKey && apiKeyInput) {
+        apiKeyInput.value = savedKey;
         updateModelInspector();
-        showStatusPanel(data.model || (modelSelect ? modelSelect.value : "kira-mini-1.0"), false);
+        showStatus("Saved API key loaded. Auto-starting gateway...", "info");
+        await startAll(true);
       } else {
         updateModelInspector();
       }
     } catch {
-      updateModelInspector();
+      if (savedKey && apiKeyInput) {
+        apiKeyInput.value = savedKey;
+        if (savedModel && modelSelect) modelSelect.value = savedModel;
+        updateModelInspector();
+        await startAll(true);
+      } else {
+        updateModelInspector();
+      }
+    } finally {
+      isAutoStarting = false;
     }
+  }
+
+  function startLiveHealthMonitor() {
+    async function measurePing() {
+      const start = performance.now();
+      try {
+        const res = await fetch("/api/status", { cache: "no-store" });
+        const duration = Math.round(performance.now() - start);
+        const latEl = document.getElementById("liveLatencyVal");
+        if (latEl) latEl.textContent = Math.max(duration, 2) + "ms";
+
+        const sigEl = document.getElementById("liveSignalText");
+        if (sigEl) {
+          if (res.ok) {
+            sigEl.textContent = "Optimal";
+            sigEl.style.color = "#34d399";
+          } else {
+            sigEl.textContent = "Degraded";
+            sigEl.style.color = "#fbbf24";
+          }
+        }
+      } catch {
+        const latEl = document.getElementById("liveLatencyVal");
+        if (latEl) latEl.textContent = "Offline";
+        const sigEl = document.getElementById("liveSignalText");
+        if (sigEl) {
+          sigEl.textContent = "Offline";
+          sigEl.style.color = "#f87171";
+        }
+      }
+    }
+
+    measurePing();
+    setInterval(measurePing, 3500);
   }
 
   var initialized = false;
@@ -2070,6 +1972,7 @@ select.model-select optgroup {
     initElements();
     bindEvents();
     loadInitialStatus();
+    startLiveHealthMonitor();
   }
 
   if (document.readyState === "complete" || document.readyState === "interactive") {

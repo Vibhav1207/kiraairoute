@@ -21,8 +21,8 @@ export function translateErrorMessage(message: string): string {
   if (lower.includes("bảo trì") || lower.includes("maintenance")) {
     return "The model service is temporarily under maintenance on Kira AI upstream. Please select another model in the KiraAI Route dashboard.";
   }
-  if (lower.includes("nhiều yêu cầu") || lower.includes("thử lại sau") || lower.includes("quá nhiều") || lower.includes("traffic")) {
-    return "The model is currently receiving high traffic. Please try again in a few seconds or switch to Mimo V2.5.";
+  if (lower.includes("nhiều yêu cầu") || lower.includes("thử lại sau") || lower.includes("quá nhiều") || lower.includes("traffic") || lower.includes("rate limit") || lower.includes("too many requests")) {
+    return "Rate limit exceeded on Kira AI upstream. Too many requests are being processed for this model. Please wait a few seconds or switch to another model (e.g. Kira Mini 2.0 or Mimo V2.5).";
   }
   if (lower.includes("số dư") || lower.includes("không đủ") || lower.includes("balance")) {
     return "Insufficient account balance reported by kiraai.vn for this API key. If you recently topped up at kiraai.vn/developer, please verify that your API key matches the top-up account or wait a moment for upstream balance sync.";
@@ -37,7 +37,7 @@ export function translateErrorMessage(message: string): string {
   return message;
 }
 
-export async function kiraChat(body: unknown, retries = 2, timeoutMs = 60000): Promise<{ status: number; data: unknown }> {
+export async function kiraChat(body: unknown, retries = 3, timeoutMs = 60000): Promise<{ status: number; data: unknown }> {
   try {
     const apiKey = getKiraApiKey();
     const response = await fetch(`${KIRA_BASE_URL}/chat/completions`, {
@@ -64,15 +64,21 @@ export async function kiraChat(body: unknown, retries = 2, timeoutMs = 60000): P
     }
 
     // Auto-retry on transient errors (429 rate-limit, 502/503/504, or high traffic concurrency responses)
+    const lowerText = (text || "").toLowerCase();
     const isTransient =
       response.status === 429 ||
       response.status === 502 ||
       response.status === 503 ||
       response.status === 504 ||
-      (typeof text === "string" && (text.includes("nhiều yêu cầu") || text.includes("thử lại") || text.includes("502 Bad Gateway") || text.includes("bảo trì")));
+      lowerText.includes("rate limit") ||
+      lowerText.includes("too many requests") ||
+      lowerText.includes("nhiều yêu cầu") ||
+      lowerText.includes("thử lại") ||
+      lowerText.includes("502 bad gateway") ||
+      lowerText.includes("bảo trì");
 
     if (isTransient && retries > 0) {
-      await delay(1000 * (3 - retries));
+      await delay(1500 * (4 - retries));
       return kiraChat(body, retries - 1, timeoutMs);
     }
 
