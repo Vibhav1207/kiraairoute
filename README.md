@@ -114,6 +114,8 @@ npm start
 | **Ling 3.0 Flash Sante** | `ling-3.0-flash-sante-free` | InclusionAI | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | Medical & Bio-Health AI |
 | **MiniMax M3 Free** | `minimax-m3-free` | MiniMax | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | Multi-Agent & Audio Synthesis |
 | **GPT 5.6 Luna Free** | `gpt-5.6-luna-free` | OpenAI Compatible | Free (Balance > 0 VND) | 250M tokens/day | 1,000,000 | Creative Writing & Structural Analysis |
+| **Claude Fable 5.1 Free** | `claude-fable-5.1-free` | Anthropic | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | General Reasoning & Logic |
+| **GPT-6 Astra Free** | `gpt-6-astra-free` | OpenAI | Free (Balance > 0 VND) | 250M tokens/day | 1,000,000 | Next-Gen Reasoning & Code |
 
 ### 💳 Paid Models (Consumes Balance / Pay-Per-Token)
 
@@ -131,6 +133,30 @@ npm start
 | **Grok 4.6** | `grok-4.6` | xAI | $1.54 | $4.62 | 128,000 | Top-tier multimodal model for STEM & code |
 | **Grok 4.5** | `grok-4.5` | xAI | $1.54 | $4.62 | 128,000 | Multimodal model optimized for fast execution |
 | **Dots 3 Note Preview** | `dots-3-note-preview` | Dots AI | $0.31 | $1.20 | 128,000 | Open-source large language model |
+| **Qwen 3.6 Flash** | `qwen3.6-flash` | Qwen / Alibaba | $0.22 | $0.85 | 128,000 | Open-source flagship coding model |
+| **Qwen 3.5 Omni Plus** | `qwen3.5-omni-plus` | Qwen / Alibaba | $0.85 | $5.38 | 128,000 | Multimodal omni vision & text processing |
+| **Qwen 3.7 Plus** | `qwen3.7-plus` | Qwen / Alibaba | $0.35 | $1.54 | 128,000 | Balanced reasoning & logical comprehension |
+| **Qwen 3.7 Max** | `qwen3.7-max` | Qwen / Alibaba | $1.19 | $3.46 | 128,000 | Deep reasoning & software architecture |
+| **Mimo V2.5 Pro** | `mimo-v2.5-pro` | Xiaomi | $0.85 | $2.65 | 128,000 | Xiaomi flagship reasoning & logic |
+| **Gemini 3.8 Flash** | `gemini-3.8-flash` | Gemini / Google | $0.66 | $3.39 | 1,000,000 | Next-gen flash model for coding workflows |
+| **Gemini 3.7 Flash** | `gemini-3.7-flash` | Gemini / Google | $0.66 | $3.39 | 1,000,000 | Next-gen flash model for coding & reasoning |
+| **Gemini 3.6 Flash** | `gemini-3.6-flash` | Gemini / Google | $1.21 | $6.92 | 1,000,000 | High-speed flash coding model |
+| **Gemini 3.5 Flash** | `gemini-3.5-flash` | Gemini / Google | $1.21 | $6.92 | 1,000,000 | Flash architecture for rapid completions |
+| **Gemini 3.5 Flash Lite** | `gemini-3.5-flash-lite` | Gemini / Google | $0.28 | $1.73 | 128,000 | Ultra-light compact fast model |
+| **Nano Banana Pro** | `gemini-3-pro-image-preview` | Gemini / Google | $0.76/img | Image | 128,000 | High-fidelity AI image generation |
+| **Nano Banana 2** | `gemini-3.1-flash-image-preview` | Gemini / Google | $0.42/img | Image | 128,000 | Fast AI image generation |
+| **Nano Banana** | `gemini-2.5-flash-image` | Gemini / Google | $2.42/img | Image | 128,000 | Google AI image generation model |
+| **Gemini 3.1 Flash TTS** | `gemini-3.1-flash-tts-preview` | Gemini / Google | $0.87 | $18.17 | 128,000 | High-fidelity Text-to-Speech voice synthesis |
+| **Gemini 2.5 Flash TTS** | `gemini-2.5-flash-tts` | Gemini / Google | $0.26 | $2.18 | 128,000 | Voice audio text-to-speech engine |
+| **Gemini 2.5 Flash Lite** | `gemini-2.5-flash-lite` | Gemini / Google | $0.07 | $0.37 | 128,000 | Ultra-fast lightweight model |
+| **Kimi K3** | `kimi-k3` | Moonshot AI | $2.60 | $10.38 | 128,000 | 2.8 Trillion parameter MoE open-source model |
+| **GPT 5.6 Luna** | `gpt-5.6-luna` | OpenAI | $0.17 | $0.34 | 1,000,000 | High-speed general text model |
+| **GPT 5.6 Terra** | `gpt-5.6-terra` | OpenAI | $1.94 | $11.69 | 1,000,000 | Balanced performance in GPT-5.6 family |
+| **GPT 5.6 Sol** | `gpt-5.6-sol` | OpenAI | $2.91 | $17.45 | 1,000,000 | Top flagship model in GPT-5.6 family |
+| **GPT 5.4** | `gpt-5.4` | OpenAI | $1.50 | $9.00 | 1,000,000 | Breakthrough multimodal logic & reasoning |
+| **GPT 5.4 mini** | `gpt-5.4-mini` | OpenAI | $0.37 | $2.25 | 1,000,000 | Compact high-speed logic model |
+| **GPT 4o Mini** | `gpt-4o-mini` | OpenAI / Kira | $0.14 | $0.87 | 128,000 | Fast OpenAI model for daily software tasks |
+| **Tencent Hy4 Preview** | `hy4` | Tencent | $0.85 | $2.54 | 128,000 | 770B MoE architecture model |
 | **Qwen 3.5 Flash** | `qwen3.5-flash` | Qwen / Alibaba | $0.22 | $0.38 | 128,000 | High-speed multimodal coding model |
 | **Claude Sonnet 5** | `claude-sonnet-5` | Anthropic | $1.73 | $9.00 | 200,000 | Flagship reasoning & code synthesis |
 | **Qwen 3.8 Max** | `qwen3.8-max` | Qwen / Alibaba | $1.92 | $5.77 | 128,000 | High-capacity deep reasoning model |
