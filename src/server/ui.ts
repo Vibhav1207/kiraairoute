@@ -426,6 +426,12 @@ select.model-select optgroup {
   border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
+.tag-paid {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
 .inspector-limits {
   font-size: 11px;
   color: var(--text-muted);
@@ -1195,14 +1201,29 @@ select.model-select optgroup {
           </optgroup>
           <optgroup label="FREE MODELS — BALANCE > 0 VND REQUIRED (Not Deducted)">
             <option value="deepseek-v4-flash-free">DeepSeek V4 Flash Free — High-Speed Code & Text [deepseek-v4-flash-free]</option>
-            <option value="deepseek-v4-flash-vision-exp">DeepSeek V4 Vision Exp — Vision & Multimodal Image [deepseek-v4-flash-vision-exp]</option>
             <option value="qwen3.8-flash">Qwen 3.8 Flash — Coding & Multimodal [qwen3.8-flash]</option>
             <option value="qwen3.8-27b-free">Qwen 3.8 27B Free — General Text & Code [qwen3.8-27b-free]</option>
             <option value="glm-5.3-flash">GLM 5.3 Flash — High-Perf Code & Multimodal [glm-5.3-flash]</option>
             <option value="ling-3.0-flash-sante-free">Ling 3.0 Flash Sante — Medical & Health AI [ling-3.0-flash-sante-free]</option>
             <option value="minimax-m3-free">MiniMax M3 Free — Multi-Agent & Audio/Voice [minimax-m3-free]</option>
-            <option value="minimax-m2.7">MiniMax M2.7 — Multi-Agent & Audio/Voice [minimax-m2.7]</option>
             <option value="gpt-5.6-luna-free">GPT 5.6 Luna Free — General Text & Reasoning [gpt-5.6-luna-free]</option>
+          </optgroup>
+          <optgroup label="PAID MODELS — CONSUMES BALANCE (Pay-Per-Token)">
+            <option value="glm-5.3">GLM 5.3 — Bilingual LLM & Text [glm-5.3] ($0.37 / $1.33)</option>
+            <option value="ox-alpha">Ox Alpha (GLM-5.3-Flash) — Multimodal Flash [ox-alpha] ($0.09 / $0.30)</option>
+            <option value="deepseek-v4-flash">DeepSeek V4 Flash — Ultra-Fast 284B Coding [deepseek-v4-flash] ($0.02 / $0.06)</option>
+            <option value="deepseek-v4-flash-0731">DeepSeek V4 Flash 0731 — 284B Coding [deepseek-v4-flash-0731] ($0.02 / $0.06)</option>
+            <option value="deepseek-v4-pro">DeepSeek V4 Pro — Flagship 284B Reasoning [deepseek-v4-pro] ($0.45 / $1.36)</option>
+            <option value="deepseek-v4-flash-vision-exp">DeepSeek V4 Vision Exp — Vision & Multimodal [deepseek-v4-flash-vision-exp] ($0.18 / $0.52)</option>
+            <option value="gpt-oss-120b">GPT OSS 120B — 120B Open Source Model [gpt-oss-120b] ($0.19 / $0.38)</option>
+            <option value="glm-5.2">GLM 5.2 — Advanced Bilingual LLM [glm-5.2] ($0.98 / $3.60)</option>
+            <option value="minimax-m3">MiniMax M3 — Multi-Agent & Audio/Voice [minimax-m3] ($0.28 / $1.08)</option>
+            <option value="grok-4.6">Grok 4.6 — Multimodal Coding & STEM [grok-4.6] ($1.54 / $4.62)</option>
+            <option value="grok-4.5">Grok 4.5 — Multimodal Coding & STEM [grok-4.5] ($1.54 / $4.62)</option>
+            <option value="dots-3-note-preview">Dots 3 Note Preview — Open-Source LLM [dots-3-note-preview] ($0.31 / $1.20)</option>
+            <option value="qwen3.5-flash">Qwen 3.5 Flash — High-Speed Multimodal [qwen3.5-flash] ($0.22 / $0.38)</option>
+            <option value="claude-sonnet-5">Claude Sonnet 5 — Flagship Reasoning & Coding [claude-sonnet-5] ($1.73 / $9.00)</option>
+            <option value="qwen3.8-max">Qwen 3.8 Max — High-Capacity Reasoning [qwen3.8-max] ($1.92 / $5.77)</option>
           </optgroup>
         </select>
 
@@ -1422,20 +1443,38 @@ select.model-select optgroup {
 <script>
 (function() {
   const models = [
-    { id: "kira-auto", name: "Kira Auto", provider: "Kira AI", free: true, balance_required: false, typeLabel: "Auto Routing / Smart Text", daily_limit: "150M tokens/day", context_window: 1000000, description: "Automatically routes requests across top models for optimal speed and uptime." },
-    { id: "kira-2.0", name: "Kira Mini 2.0", provider: "Kira AI", free: true, balance_required: false, typeLabel: "Fast Text & Code", daily_limit: "150M tokens/day", context_window: 1000000, description: "120B parameter open-source model optimized for high-speed response, general text, and coding." },
-    { id: "kira-mini-1.0", name: "Kira Mini 1.0", provider: "Kira AI", free: true, balance_required: false, typeLabel: "General Text & Code", daily_limit: "150M tokens/day", context_window: 1000000, description: "Powered by DeepSeek V4 Flash architecture, versatile model ideal for daily coding tasks." },
-    { id: "mimo-v2.5", name: "Mimo V2.5", provider: "Xiaomi", free: true, balance_required: false, typeLabel: "Reasoning & Logic", daily_limit: "150M tokens/day", context_window: 128000, description: "Xiaomi near-flagship cost-optimized model focused on complex logical reasoning, math, and problem solving." },
-    { id: "hy3", name: "Tencent Hy3 Free", provider: "Tencent", free: true, balance_required: false, typeLabel: "Agent & Coding", daily_limit: "150M tokens/day", context_window: 128000, description: "Tencent commercial-grade model engineered for autonomous AI agents and complex coding." },
-    { id: "deepseek-v4-flash-free", name: "DeepSeek V4 Flash Free", provider: "DeepSeek", free: true, balance_required: true, typeLabel: "High-Speed Code & Text", daily_limit: "250M tokens/day", context_window: 1000000, description: "Lightweight, high-speed 284B parameter model from DeepSeek V4 family." },
-    { id: "deepseek-v4-flash-vision-exp", name: "DeepSeek V4 Vision Exp", provider: "DeepSeek", free: true, balance_required: true, typeLabel: "Vision & Multimodal Image", daily_limit: "250M tokens/day", context_window: 128000, description: "Experimental multimodal vision model capable of parsing images, visual code screenshots, charts, and diagrams." },
-    { id: "qwen3.8-flash", name: "Qwen 3.8 Flash", provider: "Qwen", free: true, balance_required: true, typeLabel: "Coding & Multimodal", daily_limit: "250M tokens/day", context_window: 128000, description: "Ultra-fast multimodal model from Alibaba, tuned specifically for software engineering." },
-    { id: "qwen3.8-27b-free", name: "Qwen 3.8 27B Free", provider: "Qwen", free: true, balance_required: true, typeLabel: "General Text & Code", daily_limit: "250M tokens/day", context_window: 128000, description: "27B parameter model provided for testing, providing balanced performance." },
-    { id: "glm-5.3-flash", name: "GLM 5.3 Flash", provider: "GLM / Z.AI", free: true, balance_required: true, typeLabel: "High-Perf Code & Multimodal", daily_limit: "250M tokens/day", context_window: 128000, description: "High-performance multimodal model from Z.AI supporting fast execution." },
-    { id: "ling-3.0-flash-sante-free", name: "Ling 3.0 Flash Sante", provider: "InclusionAI", free: true, balance_required: true, typeLabel: "Medical & Health AI", daily_limit: "250M tokens/day", context_window: 128000, description: "InclusionAI specialized language model tailored for healthcare and bio-health queries." },
-    { id: "minimax-m3-free", name: "MiniMax M3 Free", provider: "MiniMax", free: true, balance_required: true, typeLabel: "Multi-Agent & Audio/Voice", daily_limit: "250M tokens/day", context_window: 128000, description: "Breakthrough multi-agent AI model with real-time speech processing and voice audio synthesis." },
-    { id: "minimax-m2.7", name: "MiniMax M2.7", provider: "MiniMax", free: true, balance_required: true, typeLabel: "Multi-Agent & Audio/Voice", daily_limit: "250M tokens/day", context_window: 128000, description: "High-speed multi-agent conversational engine supporting voice synthesis." },
-    { id: "gpt-5.6-luna-free", name: "GPT 5.6 Luna Free", provider: "OpenAI Compatible", free: true, balance_required: true, typeLabel: "General Text & Reasoning", daily_limit: "250M tokens/day", context_window: 1000000, description: "High-capacity language model for creative writing and structural synthesis." }
+    // Free models (0 VND)
+    { id: "kira-auto", name: "Kira Auto", provider: "Kira AI", free: true, category: "free_no_deposit", balance_required: false, typeLabel: "Auto Routing / Smart Text", daily_limit: "150M tokens/day", context_window: 1000000, description: "Automatically routes requests across top models for optimal speed and uptime." },
+    { id: "kira-2.0", name: "Kira Mini 2.0", provider: "Kira AI", free: true, category: "free_no_deposit", balance_required: false, typeLabel: "Fast Text & Code", daily_limit: "150M tokens/day", context_window: 1000000, description: "120B parameter open-source model optimized for high-speed response, general text, and coding." },
+    { id: "kira-mini-1.0", name: "Kira Mini 1.0", provider: "Kira AI", free: true, category: "free_no_deposit", balance_required: false, typeLabel: "General Text & Code", daily_limit: "150M tokens/day", context_window: 1000000, description: "Powered by DeepSeek V4 Flash architecture, versatile model ideal for daily coding tasks." },
+    { id: "mimo-v2.5", name: "Mimo V2.5", provider: "Xiaomi", free: true, category: "free_no_deposit", balance_required: false, typeLabel: "Reasoning & Logic", daily_limit: "150M tokens/day", context_window: 128000, description: "Xiaomi near-flagship cost-optimized model focused on complex logical reasoning, math, and problem solving." },
+    { id: "hy3", name: "Tencent Hy3 Free", provider: "Tencent", free: true, category: "free_no_deposit", balance_required: false, typeLabel: "Agent & Coding", daily_limit: "150M tokens/day", context_window: 128000, description: "Tencent commercial-grade model engineered for autonomous AI agents and complex coding." },
+
+    // Free models (Balance > 0)
+    { id: "deepseek-v4-flash-free", name: "DeepSeek V4 Flash Free", provider: "DeepSeek", free: true, category: "free_balance_required", balance_required: true, typeLabel: "High-Speed Code & Text", daily_limit: "250M tokens/day", context_window: 1000000, description: "Lightweight, high-speed 284B parameter model from DeepSeek V4 family." },
+    { id: "qwen3.8-flash", name: "Qwen 3.8 Flash", provider: "Qwen", free: true, category: "free_balance_required", balance_required: true, typeLabel: "Coding & Multimodal", daily_limit: "250M tokens/day", context_window: 128000, description: "Ultra-fast multimodal model from Alibaba, tuned specifically for software engineering." },
+    { id: "qwen3.8-27b-free", name: "Qwen 3.8 27B Free", provider: "Qwen", free: true, category: "free_balance_required", balance_required: true, typeLabel: "General Text & Code", daily_limit: "250M tokens/day", context_window: 128000, description: "27B parameter model provided for testing, providing balanced performance." },
+    { id: "glm-5.3-flash", name: "GLM 5.3 Flash", provider: "GLM / Z.AI", free: true, category: "free_balance_required", balance_required: true, typeLabel: "High-Perf Code & Multimodal", daily_limit: "250M tokens/day", context_window: 128000, description: "High-performance multimodal model from Z.AI supporting fast execution." },
+    { id: "ling-3.0-flash-sante-free", name: "Ling 3.0 Flash Sante", provider: "InclusionAI", free: true, category: "free_balance_required", balance_required: true, typeLabel: "Medical & Health AI", daily_limit: "250M tokens/day", context_window: 128000, description: "InclusionAI specialized language model tailored for healthcare and bio-health queries." },
+    { id: "minimax-m3-free", name: "MiniMax M3 Free", provider: "MiniMax", free: true, category: "free_balance_required", balance_required: true, typeLabel: "Multi-Agent & Audio/Voice", daily_limit: "250M tokens/day", context_window: 128000, description: "Breakthrough multi-agent AI model with real-time speech processing and voice audio synthesis." },
+    { id: "gpt-5.6-luna-free", name: "GPT 5.6 Luna Free", provider: "OpenAI Compatible", free: true, category: "free_balance_required", balance_required: true, typeLabel: "General Text & Reasoning", daily_limit: "250M tokens/day", context_window: 1000000, description: "High-capacity language model for creative writing and structural synthesis." },
+
+    // Paid models (Consumes Balance)
+    { id: "glm-5.3", name: "GLM 5.3", provider: "GLM / Z.AI", free: false, category: "paid", balance_required: true, typeLabel: "Bilingual LLM & Text", daily_limit: "Pay-per-token", context_window: 128000, description: "Advanced bilingual large language model from Z.AI with high-precision text understanding.", input_price: "$0.37/1M", output_price: "$1.33/1M" },
+    { id: "ox-alpha", name: "Ox Alpha (GLM-5.3-Flash)", provider: "GLM / Z.AI", free: false, category: "paid", balance_required: true, typeLabel: "Multimodal Flash", daily_limit: "Pay-per-token", context_window: 128000, description: "GOx Alpha is GLM-5.3-Flash, high-performance multimodal model from Z.AI.", input_price: "$0.09/1M", output_price: "$0.30/1M" },
+    { id: "deepseek-v4-flash", name: "DeepSeek V4 Flash", provider: "DeepSeek", free: false, category: "paid", balance_required: true, typeLabel: "Ultra-Fast 284B Coding", daily_limit: "Pay-per-token", context_window: 1000000, description: "Lightweight ultra-fast 284B model specialized in software development.", input_price: "$0.02/1M", output_price: "$0.06/1M" },
+    { id: "deepseek-v4-flash-0731", name: "DeepSeek V4 Flash 0731", provider: "DeepSeek", free: false, category: "paid", balance_required: true, typeLabel: "284B Coding (0731)", daily_limit: "Pay-per-token", context_window: 1000000, description: "DeepSeek V4 Flash 0731 build, optimized for high throughput response.", input_price: "$0.02/1M", output_price: "$0.06/1M" },
+    { id: "deepseek-v4-pro", name: "DeepSeek V4 Pro", provider: "DeepSeek", free: false, category: "paid", balance_required: true, typeLabel: "Flagship 284B Reasoning", daily_limit: "Pay-per-token", context_window: 1000000, description: "Flagship 284B model for complex reasoning and deep software engineering.", input_price: "$0.45/1M", output_price: "$1.36/1M" },
+    { id: "deepseek-v4-flash-vision-exp", name: "DeepSeek V4 Vision Exp", provider: "DeepSeek", free: false, category: "paid", balance_required: true, typeLabel: "Vision & Multimodal Image", daily_limit: "Pay-per-token", context_window: 128000, description: "Experimental vision model parsing images, code screenshots, and charts.", input_price: "$0.18/1M", output_price: "$0.52/1M" },
+    { id: "gpt-oss-120b", name: "GPT OSS 120B", provider: "OpenAI", free: false, category: "paid", balance_required: true, typeLabel: "120B Open Source Model", daily_limit: "Pay-per-token", context_window: 128000, description: "Open-source 120B model combining reasoning and structural code capability.", input_price: "$0.19/1M", output_price: "$0.38/1M" },
+    { id: "glm-5.2", name: "GLM 5.2", provider: "GLM / Z.AI", free: false, category: "paid", balance_required: true, typeLabel: "Advanced Bilingual LLM", daily_limit: "Pay-per-token", context_window: 128000, description: "Advanced bilingual model with strong understanding and language generation.", input_price: "$0.98/1M", output_price: "$3.60/1M" },
+    { id: "minimax-m3", name: "MiniMax M3", provider: "MiniMax", free: false, category: "paid", balance_required: true, typeLabel: "Multi-Agent & Audio/Voice", daily_limit: "Pay-per-token", context_window: 128000, description: "Breakthrough multi-agent model with real-time speech processing and voice audio.", input_price: "$0.28/1M", output_price: "$1.08/1M" },
+    { id: "grok-4.6", name: "Grok 4.6", provider: "xAI", free: false, category: "paid", balance_required: true, typeLabel: "Multimodal Coding & STEM", daily_limit: "Pay-per-token", context_window: 128000, description: "Top-tier multimodal model from xAI leading in programming and STEM reasoning.", input_price: "$1.54/1M", output_price: "$4.62/1M" },
+    { id: "grok-4.5", name: "Grok 4.5", provider: "xAI", free: false, category: "paid", balance_required: true, typeLabel: "Multimodal Coding & STEM", daily_limit: "Pay-per-token", context_window: 128000, description: "Flagship multimodal model from xAI for code, STEM, and fast execution.", input_price: "$1.54/1M", output_price: "$4.62/1M" },
+    { id: "dots-3-note-preview", name: "Dots 3 Note Preview", provider: "Dots AI", free: false, category: "paid", balance_required: true, typeLabel: "Open-Source LLM", daily_limit: "Pay-per-token", context_window: 128000, description: "First open-source model from Dots AI lab for general text and reasoning.", input_price: "$0.31/1M", output_price: "$1.20/1M" },
+    { id: "qwen3.5-flash", name: "Qwen 3.5 Flash", provider: "Qwen / Alibaba", free: false, category: "paid", balance_required: true, typeLabel: "High-Speed Multimodal Coding", daily_limit: "Pay-per-token", context_window: 128000, description: "Next-gen ultra-fast multimodal model from Alibaba optimized for fast response.", input_price: "$0.22/1M", output_price: "$0.38/1M" },
+    { id: "claude-sonnet-5", name: "Claude Sonnet 5", provider: "Anthropic", free: false, category: "paid", balance_required: true, typeLabel: "Flagship Reasoning & Coding", daily_limit: "Pay-per-token", context_window: 200000, description: "Top-tier model from Anthropic combining deep reasoning, synthesis, and coding.", input_price: "$1.73/1M", output_price: "$9.00/1M" },
+    { id: "qwen3.8-max", name: "Qwen 3.8 Max", provider: "Qwen / Alibaba", free: false, category: "paid", balance_required: true, typeLabel: "High-Capacity Reasoning", daily_limit: "Pay-per-token", context_window: 128000, description: "Premium large-scale model from Alibaba Qwen with deep reasoning capability.", input_price: "$1.92/1M", output_price: "$5.77/1M" }
   ];
 
   let modelSelect, apiKeyInput, startButton, btnTestModel, statusToast, statusPanel;
@@ -1492,7 +1531,10 @@ select.model-select optgroup {
 
     const badge = document.getElementById("mBadge");
     if (badge) {
-      if (model.balance_required) {
+      if (model.category === "paid" || (!model.free && model.balance_required)) {
+        badge.className = "badge-tag tag-paid";
+        badge.textContent = "Paid (" + (model.input_price || "") + " in / " + (model.output_price || "") + " out)";
+      } else if (model.balance_required) {
         badge.className = "badge-tag tag-balance";
         badge.textContent = "Free (Requires Balance > 0 VND)";
       } else {
@@ -1546,7 +1588,10 @@ select.model-select optgroup {
 
     const badge = document.getElementById("modalModelBadge");
     if (badge) {
-      if (modelInfo.balance_required) {
+      if (modelInfo.category === "paid" || (!modelInfo.free && modelInfo.balance_required)) {
+        badge.className = "badge-tag tag-paid";
+        badge.textContent = "Paid (" + (modelInfo.input_price || "") + " in / " + (modelInfo.output_price || "") + " out)";
+      } else if (modelInfo.balance_required) {
         badge.className = "badge-tag tag-balance";
         badge.textContent = "Free (Balance > 0 VND)";
       } else {

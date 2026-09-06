@@ -6,7 +6,7 @@
 
 *Route Kira AI models to OpenAI-compatible coding tools like Codex, Cursor, Continue, and custom developer scripts.*
 
-[![npm version](https://img.shields.io/badge/npm-v0.5.0-6366f1.svg?style=for-the-badge&logo=npm&logoColor=white)](https://github.com/Vibhav1207/kiraairoute/packages)
+[![npm version](https://img.shields.io/badge/npm-v0.5.1-6366f1.svg?style=for-the-badge&logo=npm&logoColor=white)](https://github.com/Vibhav1207/kiraairoute/packages)
 [![License](https://img.shields.io/badge/license-MIT-6366f1.svg?style=for-the-badge)](LICENSE)
 [![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-339933.svg?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178c6.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
@@ -98,7 +98,7 @@ npm start
 
 ## 🤖 Supported Models
 
-Kira AI provides daily free token allowances for the following models:
+### 🆓 Free Models
 
 | Model Name | Model ID | Provider | Balance Requirement | Daily Allowance | Context Window | Best Used For |
 |---|---|---|---|---|---|---|
@@ -107,15 +107,33 @@ Kira AI provides daily free token allowances for the following models:
 | **Kira Mini 1.0** | `kira-mini-1.0` | Kira AI | Free (0 Deposit) | 150M tokens/day | 1,000,000 | General Text & Daily Coding |
 | **Mimo V2.5** | `mimo-v2.5` | Xiaomi | Free (0 Deposit) | 150M tokens/day | 128,000 | Logic, Math & Reasoning |
 | **Tencent Hy3 Free** | `hy3` | Tencent | Free (0 Deposit) | 150M tokens/day | 128,000 | Autonomous AI Agents & Code |
-| **DeepSeek V4 Flash** | `deepseek-v4-flash-free` | DeepSeek | Free (Balance > 0 VND) | 250M tokens/day | 1,000,000 | High-Speed Code & Large Context |
-| **DeepSeek V4 Vision** | `deepseek-v4-flash-vision-exp` | DeepSeek | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | Multimodal Vision & Diagrams |
+| **DeepSeek V4 Flash Free** | `deepseek-v4-flash-free` | DeepSeek | Free (Balance > 0 VND) | 250M tokens/day | 1,000,000 | High-Speed Code & Large Context |
 | **Qwen 3.8 Flash** | `qwen3.8-flash` | Qwen | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | Software Engineering |
 | **Qwen 3.8 27B Free** | `qwen3.8-27b-free` | Qwen | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | General Text & Coding |
 | **GLM 5.3 Flash** | `glm-5.3-flash` | GLM / Z.AI | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | High-Performance Multimodal |
 | **Ling 3.0 Flash Sante** | `ling-3.0-flash-sante-free` | InclusionAI | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | Medical & Bio-Health AI |
 | **MiniMax M3 Free** | `minimax-m3-free` | MiniMax | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | Multi-Agent & Audio Synthesis |
-| **MiniMax M2.7** | `minimax-m2.7` | MiniMax | Free (Balance > 0 VND) | 250M tokens/day | 128,000 | Conversational Multi-Agent |
 | **GPT 5.6 Luna Free** | `gpt-5.6-luna-free` | OpenAI Compatible | Free (Balance > 0 VND) | 250M tokens/day | 1,000,000 | Creative Writing & Structural Analysis |
+
+### 💳 Paid Models (Consumes Balance / Pay-Per-Token)
+
+| Model Name | Model ID | Provider | Input Price / 1M | Output Price / 1M | Context Window | Description |
+|---|---|---|---|---|---|---|
+| **GLM 5.3** | `glm-5.3` | GLM / Z.AI | $0.37 | $1.33 | 128,000 | Advanced bilingual LLM from Z.AI |
+| **Ox Alpha (GLM-5.3-Flash)** | `ox-alpha` | GLM / Z.AI | $0.09 | $0.30 | 128,000 | Multimodal high-performance flash model |
+| **DeepSeek V4 Flash** | `deepseek-v4-flash` | DeepSeek | $0.02 | $0.06 | 1,000,000 | Ultra-fast 284B parameter coding model |
+| **DeepSeek V4 Flash 0731** | `deepseek-v4-flash-0731` | DeepSeek | $0.02 | $0.06 | 1,000,000 | High throughput 284B parameter build |
+| **DeepSeek V4 Pro** | `deepseek-v4-pro` | DeepSeek | $0.45 | $1.36 | 1,000,000 | Flagship 284B reasoning & engineering |
+| **DeepSeek V4 Vision Exp** | `deepseek-v4-flash-vision-exp` | DeepSeek | $0.18 | $0.52 | 128,000 | Experimental multimodal vision model |
+| **GPT OSS 120B** | `gpt-oss-120b` | OpenAI | $0.19 | $0.38 | 128,000 | 120B parameter open-source model |
+| **GLM 5.2** | `glm-5.2` | GLM / Z.AI | $0.98 | $3.60 | 128,000 | Advanced bilingual language model |
+| **MiniMax M3** | `minimax-m3` | MiniMax | $0.28 | $1.08 | 128,000 | Multi-agent model with voice synthesis |
+| **Grok 4.6** | `grok-4.6` | xAI | $1.54 | $4.62 | 128,000 | Top-tier multimodal model for STEM & code |
+| **Grok 4.5** | `grok-4.5` | xAI | $1.54 | $4.62 | 128,000 | Multimodal model optimized for fast execution |
+| **Dots 3 Note Preview** | `dots-3-note-preview` | Dots AI | $0.31 | $1.20 | 128,000 | Open-source large language model |
+| **Qwen 3.5 Flash** | `qwen3.5-flash` | Qwen / Alibaba | $0.22 | $0.38 | 128,000 | High-speed multimodal coding model |
+| **Claude Sonnet 5** | `claude-sonnet-5` | Anthropic | $1.73 | $9.00 | 200,000 | Flagship reasoning & code synthesis |
+| **Qwen 3.8 Max** | `qwen3.8-max` | Qwen / Alibaba | $1.92 | $5.77 | 128,000 | High-capacity deep reasoning model |
 
 ---
 
