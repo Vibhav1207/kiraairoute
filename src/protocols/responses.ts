@@ -83,33 +83,69 @@ export interface ExtractedToolCall {
 export function extractToolCallFromText(text: string): ExtractedToolCall | null {
   if (!text) return null;
 
-  // 1. Match Qwen style: <tool_call><function=apply_patch><parameter=patchText>...</parameter></function></tool_call>
-  const qwenMatch = text.match(/<tool_call>\s*<function\s*=\s*['"]?([a-zA-Z0-9_]+)['"]?>([\s\S]*?)<\/function>\s*<\/tool_call>/i);
-  if (qwenMatch) {
-    const funcName = qwenMatch[1];
-    const body = qwenMatch[2];
-    const args: Record<string, string> = {};
-
-    const paramRegex = /<parameter\s*=\s*['"]?([a-zA-Z0-9_]+)['"]?>([\s\S]*?)<\/parameter>/gi;
-    let pMatch;
-    while ((pMatch = paramRegex.exec(body)) !== null) {
-      args[pMatch[1]] = pMatch[2].trim();
+  // 1. Raw Patch fallback: *** Begin Patch ... *** End Patch
+  if (text.includes("*** Begin Patch") && text.includes("*** End Patch")) {
+    const patchMatch = text.match(/(\*\*\* Begin Patch[\s\S]*?\*\*\* End Patch)/);
+    if (patchMatch) {
+      const patchText = patchMatch[1].trim();
+      const cleanedText = text.replace(patchMatch[0], "").trim();
+      return { name: "apply_patch", arguments: { patchText }, cleanedText };
     }
-
-    const cleanedText = text.replace(qwenMatch[0], "").trim();
-    return { name: funcName, arguments: args, cleanedText };
   }
 
-  // 2. Match JSON inside <tool_call>...</tool_call>
-  const jsonMatch = text.match(/<tool_call>\s*(\{[\s\S]*?\})\s*<\/tool_call>/i);
-  if (jsonMatch) {
-    try {
-      const parsed = JSON.parse(jsonMatch[1]);
-      const name = parsed.name || parsed.function || "apply_patch";
-      const args = parsed.arguments || parsed.parameters || {};
-      const cleanedText = text.replace(jsonMatch[0], "").trim();
-      return { name, arguments: typeof args === "string" ? JSON.parse(args) : args, cleanedText };
-    } catch {}
+  // 2. Qwen / GLM / XML tool call wrapper: <tool_call> ... </tool_call>
+  const toolCallMatch = text.match(/<tool_call>([\s\S]*?)(?:<\/tool_call>|$)/i);
+  if (toolCallMatch) {
+    const inner = toolCallMatch[1];
+    const args: Record<string, string> = {};
+    let funcName = "apply_patch";
+
+    // Check for <function=name>
+    const funcMatch = inner.match(/<function\s*=\s*['"]?([a-zA-Z0-9_]+)['"]?>/i);
+    if (funcMatch) {
+      funcName = funcMatch[1];
+    }
+
+    // Extract parameters: <parameter name="key">val</parameter> OR <parameter=key>val</parameter>
+    const paramRegex = /<parameter(?:\s+name\s*=\s*['"]?([a-zA-Z0-9_]+)['"]?|\s*=\s*['"]?([a-zA-Z0-9_]+)['"]?)>([\s\S]*?)<\/parameter>/gi;
+    let pMatch;
+    while ((pMatch = paramRegex.exec(inner)) !== null) {
+      const key = pMatch[1] || pMatch[2];
+      const val = pMatch[3].trim();
+      if (key) args[key] = val;
+    }
+
+    // Check JSON inside tool_call
+    if (Object.keys(args).length === 0) {
+      const jsonMatch = inner.match(/(\{[\s\S]*?\})/);
+      if (jsonMatch) {
+        try {
+          const parsed = JSON.parse(jsonMatch[1]);
+          funcName = parsed.name || parsed.function || funcName;
+          const parsedArgs = parsed.arguments || parsed.parameters || parsed;
+          Object.assign(args, typeof parsedArgs === "object" ? parsedArgs : {});
+        } catch {}
+      }
+    }
+
+    const cleanedText = text.replace(toolCallMatch[0], "").trim();
+
+    // If GLM/model produced filename/path + content instead of patchText, convert to apply_patch
+    const filePath = args.filename || args.path || args.file || args.filepath;
+    const fileContent = args.content || args.code || args.text || args.body;
+    if (filePath && fileContent && !args.patchText) {
+      const lines = fileContent.split("\n").map((l) => (l.startsWith("+") ? l : "+" + l)).join("\n");
+      const patchText = `*** Begin Patch\n*** Add File: ${filePath}\n${lines}\n*** End Patch`;
+      return {
+        name: "apply_patch",
+        arguments: { patchText },
+        cleanedText
+      };
+    }
+
+    if (Object.keys(args).length > 0) {
+      return { name: funcName, arguments: args, cleanedText };
+    }
   }
 
   // 3. Match GLM style <tool_call:id>apply_patch\n...
@@ -125,16 +161,6 @@ export function extractToolCallFromText(text: string): ExtractedToolCall | null 
     }
     const cleanedText = text.replace(glmMatch[0], "").trim();
     return { name: funcName, arguments: args, cleanedText };
-  }
-
-  // 4. Fallback for raw patch strings: *** Begin Patch ... *** End Patch
-  if (text.includes("*** Begin Patch") && text.includes("*** End Patch")) {
-    const patchMatch = text.match(/(\*\*\* Begin Patch[\s\S]*?\*\*\* End Patch)/);
-    if (patchMatch) {
-      const patchText = patchMatch[1].trim();
-      const cleanedText = text.replace(patchMatch[0], "").trim();
-      return { name: "apply_patch", arguments: { patchText }, cleanedText };
-    }
   }
 
   return null;

@@ -513,12 +513,9 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
 
       // If Codex requested streaming
       if (body?.stream === true) {
-        const candidateModels = [
-          model,
-          ...(model !== "mimo-v2.5" ? ["mimo-v2.5"] : []),
-          ...(model !== "hy3" ? ["hy3"] : []),
-          ...(model !== "kira-2.0" ? ["kira-2.0"] : [])
-        ];
+        const candidateModels = model === "kira-auto"
+          ? ["kira-mini-1.0", "kira-2.0", "mimo-v2.5", "hy3"]
+          : [model];
 
         let upstream: Response | null = null;
         let lastErrorText = "";
@@ -801,11 +798,9 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       }
 
       // Non-streaming fallback
-      const candidateModels = [
-        model,
-        ...(model !== "mimo-v2.5" ? ["mimo-v2.5"] : []),
-        ...(model !== "hy3" ? ["hy3"] : [])
-      ];
+      const candidateModels = model === "kira-auto"
+        ? ["kira-mini-1.0", "kira-2.0", "mimo-v2.5", "hy3"]
+        : [model];
 
       let upstreamResult: { status: number; data: unknown } | null = null;
       let successfulModel = model;
@@ -853,12 +848,9 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       const chatPayload = anthropicToChat(body);
 
       if (body?.stream === true) {
-        const candidateModels = [
-          model,
-          ...(model !== "mimo-v2.5" ? ["mimo-v2.5"] : []),
-          ...(model !== "hy3" ? ["hy3"] : []),
-          ...(model !== "kira-2.0" ? ["kira-2.0"] : [])
-        ];
+        const candidateModels = model === "kira-auto"
+          ? ["kira-mini-1.0", "kira-2.0", "mimo-v2.5", "hy3"]
+          : [model];
 
         let upstream: Response | null = null;
         let lastErrorText = "";
