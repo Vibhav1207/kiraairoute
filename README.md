@@ -6,7 +6,7 @@
 
 *Route Kira AI models to OpenAI-compatible coding tools like Codex, Cursor, Continue, and custom developer scripts.*
 
-[![npm version](https://img.shields.io/npm/v/@vibhav1207/kiraairoute.svg?style=for-the-badge&color=6366f1)](https://www.npmjs.com/package/@vibhav1207/kiraairoute)
+[![npm version](https://img.shields.io/badge/npm-v0.5.0-6366f1.svg?style=for-the-badge&logo=npm&logoColor=white)](https://github.com/Vibhav1207/kiraairoute/packages)
 [![License](https://img.shields.io/badge/license-MIT-6366f1.svg?style=for-the-badge)](LICENSE)
 [![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-339933.svg?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178c6.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
